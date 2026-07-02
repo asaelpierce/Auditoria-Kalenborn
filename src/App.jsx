@@ -339,32 +339,6 @@ const formatTimeRange = (start, durationMin) => {
 
 
 
-const useXlsxLoader = () => {
-  const [xlsxReady, setXlsxReady] = useState(false);
-  const xlsxLoadingRef = useRef(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && XLSX) {
-      setXlsxReady(true);
-      return;
-    }
-    if (xlsxLoadingRef.current) return;
-    xlsxLoadingRef.current = true;
-
-    const script = document.createElement('script');
-    script.src = XLSX_CDN_URL;
-    script.async = true;
-    script.onload = () => setXlsxReady(true);
-    script.onerror = () => {
-      xlsxLoadingRef.current = false;
-      console.error('Não foi possível carregar a biblioteca de exportação Excel.');
-    };
-    document.body.appendChild(script);
-  }, []);
-
-  return xlsxReady;
-};
-
 // ---------------------------------------------------------------------------
 // COMPONENTE PRINCIPAL
 // ---------------------------------------------------------------------------
@@ -573,8 +547,6 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   const selectedSectorRequisitos = sectors.find((s) => s.nome === selectedSector)?.requisitos || '';
 
 
-
-  const xlsxReady = useXlsxLoader();
 
   const [raiCounter, setRaiCounter] = useState(1);
   const [rncCounter, setRncCounter] = useState(1);
