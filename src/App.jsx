@@ -619,39 +619,12 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
     } catch {}
   }, [auditorias]);
 
-  // Helper: atualiza um campo da auditoria ativa
-  const updateAtiva = (patch) => {
-    setAuditorias(prev => prev.map(a =>
-      a.localId === auditoriaAtivaId ? { ...a, ...patch } : a
-    ));
-  };
-
-  // Getters que lêem da auditoria ativa (compatibilidade com o restante do código)
-  const checklist        = auditoriaAtiva?.checklist        || [];
-  const selectedSector   = auditoriaAtiva?.setor            || 'COMERCIAL';
-  const checklistStatus  = auditoriaAtiva?.checklistStatus  || 'Em Andamento';
-  const checklistClosedAt= auditoriaAtiva?.checklistClosedAt ? new Date(auditoriaAtiva.checklistClosedAt) : null;
-  const reopenHistory    = auditoriaAtiva?.reopenHistory    || [];
-  const report           = auditoriaAtiva?.report           || {};
-
-  // Setters que escrevem na auditoria ativa
-  const setChecklist       = (v) => updateAtiva({ checklist: typeof v === 'function' ? v(checklist) : v });
-  const setChecklistStatus = (v) => updateAtiva({ checklistStatus: typeof v === 'function' ? v(checklistStatus) : v });
-  const setChecklistClosedAt=(v) => updateAtiva({ checklistClosedAt: v ? (v instanceof Date ? v.toISOString() : v) : null });
-  const setReopenHistory   = (v) => updateAtiva({ reopenHistory: typeof v === 'function' ? v(reopenHistory) : v });
-  const setReport          = (v) => updateAtiva({ report: typeof v === 'function' ? v(report) : v });
-  const setSelectedSector  = () => {}; // setor é imutável após criar — não faz nada
-
-  const usingGenericChecklist = !templateMap[selectedSector];
-
-  const dynamicRaiNumber = auditoriaAtiva?.raiNumber || `${pad3(raiCounter)}/${currentYear}`;
-
-  // ── Indicador de status de rascunho ──────────────────────────────────────
+  // ── Estados de status ─────────────────────────────────────────────────────
   const [autoSaveStatus, setAutoSaveStatus] = useState('saved');
   const [lastSavedAt, setLastSavedAt]       = useState(null);
   const markUnsaved = () => setAutoSaveStatus('unsaved');
 
-  // Salva rascunho manualmente (já está no useEffect, este só atualiza o indicador)
+  // Salva rascunho manualmente
   const saveRascunho = () => {
     try {
       setAutoSaveStatus('saved');
@@ -663,6 +636,31 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   useEffect(() => {
     if (auditoriaAtivaId) setAutoSaveStatus('unsaved');
   }, [auditorias]);
+
+  // Helper: atualiza um campo da auditoria ativa
+  const updateAtiva = useCallback((patch) => {
+    setAuditorias(prev => prev.map(a =>
+      a.localId === auditoriaAtivaId ? { ...a, ...patch } : a
+    ));
+  }, [auditoriaAtivaId]);
+
+  // Getters derivados — todos via useMemo para evitar TDZ na minificação
+  const checklist         = useMemo(() => auditoriaAtiva?.checklist        || [], [auditoriaAtiva]);
+  const selectedSector    = useMemo(() => auditoriaAtiva?.setor            || 'COMERCIAL', [auditoriaAtiva]);
+  const checklistStatus   = useMemo(() => auditoriaAtiva?.checklistStatus  || 'Em Andamento', [auditoriaAtiva]);
+  const checklistClosedAt = useMemo(() => auditoriaAtiva?.checklistClosedAt ? new Date(auditoriaAtiva.checklistClosedAt) : null, [auditoriaAtiva]);
+  const reopenHistory     = useMemo(() => auditoriaAtiva?.reopenHistory    || [], [auditoriaAtiva]);
+  const report            = useMemo(() => auditoriaAtiva?.report           || {}, [auditoriaAtiva]);
+  const dynamicRaiNumber  = useMemo(() => auditoriaAtiva?.raiNumber        || `${pad3(raiCounter)}/${currentYear}`, [auditoriaAtiva, raiCounter, currentYear]);
+  const usingGenericChecklist = useMemo(() => !templateMap[auditoriaAtiva?.setor || 'COMERCIAL'], [templateMap, auditoriaAtiva]);
+
+  // Setters que escrevem na auditoria ativa
+  const setChecklist        = useCallback((v) => updateAtiva({ checklist:        typeof v === 'function' ? v(auditoriaAtiva?.checklist        || []) : v }), [updateAtiva, auditoriaAtiva]);
+  const setChecklistStatus  = useCallback((v) => updateAtiva({ checklistStatus:  typeof v === 'function' ? v(auditoriaAtiva?.checklistStatus  || 'Em Andamento') : v }), [updateAtiva, auditoriaAtiva]);
+  const setChecklistClosedAt= useCallback((v) => updateAtiva({ checklistClosedAt: v ? (v instanceof Date ? v.toISOString() : v) : null }), [updateAtiva]);
+  const setReopenHistory    = useCallback((v) => updateAtiva({ reopenHistory:    typeof v === 'function' ? v(auditoriaAtiva?.reopenHistory    || []) : v }), [updateAtiva, auditoriaAtiva]);
+  const setReport           = useCallback((v) => updateAtiva({ report:           typeof v === 'function' ? v(auditoriaAtiva?.report           || {}) : v }), [updateAtiva, auditoriaAtiva]);
+  const setSelectedSector   = useCallback(() => {}, []); // setor é imutável
 
   // ── Criar nova auditoria ─────────────────────────────────────────────────
   const criarNovaAuditoria = (setor) => {
