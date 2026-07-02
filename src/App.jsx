@@ -97,6 +97,7 @@ const SENHA_PADRAO = 'Kdb@2026';
 
 const USUARIOS_BASE = [
   { email: 'luciene.batista@kalenborn.com.br', nome: 'Luciene Batista', setor: 'QUALIDADE - SEGURANÇA NO TRABALHO', role: 'admin' },
+  { email: 'asael.abdon@kalenborn.com.br',    nome: 'Asael Abdon',     setor: 'QUALIDADE - SEGURANÇA NO TRABALHO', role: 'admin' },
   { email: 'luiz@kalenborn.com.br',            nome: 'Luiz',            setor: 'ALTA DIREÇÃO', role: 'setor' },
   { email: 'fabio.lago@kalenborn.com.br',       nome: 'Fábio Lago',     setor: 'ALTA DIREÇÃO', role: 'setor' },
   { email: 'ricardo.pereira@kalenborn.com.br',  nome: 'Ricardo Pereira',   setor: 'COMERCIAL', role: 'setor' },
@@ -639,19 +640,6 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   }, [report]);
 
   // Salvar rascunho manualmente — confirma que está persistido e atualiza o indicador
-  const saveRascunho = () => {
-    try {
-      localStorage.setItem(lsKey('checklist'), JSON.stringify(checklist));
-      localStorage.setItem(lsKey('report'), JSON.stringify(report));
-      localStorage.setItem(lsKey('checklistStatus'), checklistStatus);
-      localStorage.setItem(lsKey('sector'), selectedSector);
-      setAutoSaveStatus('saved');
-      setLastSavedAt(new Date());
-    } catch {
-      setAutoSaveStatus('error');
-    }
-  };
-
   const [rncs, setRncs] = useState([]);
   const [savedAudits, setSavedAudits] = useState([]);
 
@@ -671,6 +659,20 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
 
   // Marca rascunho como "não salvo" quando qualquer coisa muda
   const markUnsaved = () => setAutoSaveStatus('unsaved');
+
+  // Salva rascunho manualmente no localStorage
+  const saveRascunho = () => {
+    try {
+      localStorage.setItem(lsKey('checklist'), JSON.stringify(checklist));
+      localStorage.setItem(lsKey('report'), JSON.stringify(report));
+      localStorage.setItem(lsKey('checklistStatus'), checklistStatus);
+      localStorage.setItem(lsKey('sector'), selectedSector);
+      setAutoSaveStatus('saved');
+      setLastSavedAt(new Date());
+    } catch {
+      setAutoSaveStatus('error');
+    }
+  };
 
   const [calendarView, setCalendarView] = useState('month');
   const [calendarAnchor, setCalendarAnchor] = useState(new Date());
