@@ -588,41 +588,19 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   // O setor fica TRAVADO ao criar — não pode mudar depois.
   // Rascunho salvo por localId (não por email global).
 
-  const lsAuditorias = `sga_rascunhos_${currentUser.email}`;
-
-  // Carrega mapa de rascunhos em andamento do localStorage
-  const loadRascunhos = () => {
-    try { return JSON.parse(localStorage.getItem(lsAuditorias) || '{}'); } catch { return {}; }
-  };
-  const saveRascunhos = (map) => {
-    try { localStorage.setItem(lsAuditorias, JSON.stringify(map)); } catch {}
-  };
-
-  // Lista de auditorias em andamento (cada uma com seu estado completo)
-  const [auditorias, setAuditorias] = useState(() => {
-    const saved = loadRascunhos();
-    const lista = Object.values(saved);
-    // Migração: se havia rascunho no formato antigo, converte
+  // Persiste todas as auditorias em andamento sempre que mudar
+  useEffect(() => {
     try {
-      const oldChecklist = localStorage.getItem(`sga_draft_${currentUser.email}_checklist`);
-      const oldSector    = localStorage.getItem(`sga_draft_${currentUser.email}_sector`) || 'COMERCIAL';
-      const oldReport    = localStorage.getItem(`sga_draft_${currentUser.email}_report`);
-      const oldStatus    = localStorage.getItem(`sga_draft_${currentUser.email}_checklistStatus`) || 'Em Andamento';
-      if (oldChecklist && lista.length === 0) {
-        const migrated = {
-          localId: 'migrado_1',
-          setor: oldSector,
-          raiNumber: `001/${new Date().getFullYear()}`,
-          checklist: JSON.parse(oldChecklist),
-          checklistStatus: oldStatus,
-          checklistClosedAt: null,
-          reopenHistory: [],
-          report: oldReport ? JSON.parse(oldReport) : {}
-        };
-        return [migrated];
-      }
+      const map = {};
+      auditorias.forEach(a => { map[a.localId] = a; });
+      localStorage.setItem(`sga_rascunhos_${currentUser.email}`, JSON.stringify(map));
     } catch {}
-    return lista;
+  }, [auditorias]);  // Lista de auditorias em andamento (cada uma com seu estado completo)
+  const [auditorias, setAuditorias] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(`sga_rascunhos_${currentUser.email}`) || '{}');
+      return Object.values(saved);
+    } catch { return []; }
   });
 
   // Auditoria atualmente aberta no editor (null = nenhuma)
@@ -634,9 +612,11 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
 
   // Persiste todas as auditorias em andamento sempre que mudar
   useEffect(() => {
-    const map = {};
-    auditorias.forEach(a => { map[a.localId] = a; });
-    saveRascunhos(map);
+    try {
+      const map = {};
+      auditorias.forEach(a => { map[a.localId] = a; });
+      localStorage.setItem(`sga_rascunhos_${currentUser.email}`, JSON.stringify(map));
+    } catch {}
   }, [auditorias]);
 
   // Helper: atualiza um campo da auditoria ativa
