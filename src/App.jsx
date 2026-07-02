@@ -418,12 +418,20 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
 
   useEffect(() => {
     const loadFromSupabase = async () => {
+      // Cada seção tem seu próprio try/catch: se uma falhar, as outras continuam
+      // carregando normalmente em vez de deixar a tela inteira vazia.
+
+      // 1. Setores com requisitos
       try {
-        // 1. Setores com requisitos
         const setoresData = await supaFetch('sga_setores?select=id,nome,requisitos&ativo=eq.true&order=nome');
         if (setoresData.length > 0) setSectors(setoresData);
+      } catch (err) {
+        console.error('Erro ao carregar setores:', err);
+        setDbError('Falha ao carregar setores.');
+      }
 
-        // 2. Templates de perguntas (todas de uma vez, ordenadas)
+      // 2. Templates de perguntas (todas de uma vez, ordenadas)
+      try {
         const templatesData = await supaFetch(
           'sga_checklist_templates?select=pergunta,ordem,sga_setores(nome)&order=ordem'
         );
@@ -435,8 +443,13 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
           map[setor].push(t.pergunta);
         });
         setTemplateMap(map);
+      } catch (err) {
+        console.error('Erro ao carregar templates de checklist:', err);
+        setDbError('Falha ao carregar templates de checklist.');
+      }
 
-        // 3. Auditorias salvas (histórico)
+      // 3. Auditorias salvas (histórico)
+      try {
         const auditoriasData = await supaFetch(
           'sga_auditorias?select=id,rai_numero,data_emissao,unidade,status,qtd_nc,auditado_nome,pontos_positivos,observacoes,melhorias,conclusao,sga_setores(nome),sga_auditores(nome)&order=created_at.desc&limit=100'
         );
@@ -469,8 +482,13 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
           const nums = mapped.map((a) => parseInt(a.raiNumber?.split('/')[0] || '0', 10)).filter(Boolean);
           if (nums.length) setRaiCounter(Math.max(...nums) + 1);
         }
+      } catch (err) {
+        console.error('Erro ao carregar histórico de auditorias:', err);
+        setDbError('Falha ao carregar histórico de auditorias.');
+      }
 
-        // 4. RNCs
+      // 4. RNCs
+      try {
         const rncsData = await supaFetch(
           'sga_rncs?select=*&order=created_at.desc&limit=200'
         );
@@ -506,8 +524,13 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
           const rncNums = mappedRncs.map((r) => parseInt(r.id, 10)).filter(Boolean);
           if (rncNums.length) setRncCounter(Math.max(...rncNums) + 1);
         }
+      } catch (err) {
+        console.error('Erro ao carregar RNCs:', err);
+        setDbError('Falha ao carregar RNCs.');
+      }
 
-        // 5. Eventos do calendário
+      // 5. Eventos do calendário
+      try {
         const eventosData = await supaFetch(
           'sga_eventos_calendario?select=id,data_auditoria,horario,duracao_min,unidade,observacoes,status,sga_setores(nome),sga_auditores(nome)&order=data_auditoria&limit=100'
         );
@@ -524,8 +547,13 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
           }));
           setAuditEvents(mappedEvents);
         }
+      } catch (err) {
+        console.error('Erro ao carregar eventos do calendário:', err);
+        setDbError('Falha ao carregar calendário.');
+      }
 
-        // 6. Documentos por setor
+      // 6. Documentos por setor
+      try {
         const docsData = await supaFetch(
           'sga_documentos?select=*&order=created_at.desc&limit=500'
         );
@@ -550,13 +578,12 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
           }));
           setDocumentos(mappedDocs);
         }
-
-        setDbLoading(false);
       } catch (err) {
-        console.error('Erro ao carregar dados do Supabase:', err);
-        setDbError('Não foi possível conectar ao servidor. Usando dados locais.');
-        setDbLoading(false);
+        console.error('Erro ao carregar documentos:', err);
+        setDbError('Falha ao carregar documentos.');
       }
+
+      setDbLoading(false);
     };
     loadFromSupabase();
   }, []);
