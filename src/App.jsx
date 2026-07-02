@@ -347,17 +347,33 @@ const formatTimeRange = (start, durationMin) => {
 // para evitar violação das regras de Hooks (useState antes de return condicional)
 export default function AppWrapper() {
   const [currentUser, setCurrentUser] = useState(null);
-  // extraAdmins: emails promovidos a auditor pela Luciene — persiste em localStorage
-  const [extraAdmins, setExtraAdmins] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('sga_extra_admins') || '[]');
-    } catch { return []; }
-  });
+  // extraAdmins: emails promovidos a auditor pela Luciene — persiste no Supabase
+  const [extraAdmins, setExtraAdmins] = useState([]);
 
-  // Persiste extraAdmins sempre que mudar
+  // Carrega extraAdmins do banco ao montar
   useEffect(() => {
-    try { localStorage.setItem('sga_extra_admins', JSON.stringify(extraAdmins)); } catch {}
-  }, [extraAdmins]);
+    supaFetch('sga_extra_admins?select=email')
+      .then((rows) => setExtraAdmins(rows.map((r) => r.email.toLowerCase())))
+      .catch((err) => console.error('Erro ao carregar auditores promovidos:', err));
+  }, []);
+
+  // Promove/rebaixa um e-mail a admin — atualiza o banco e o estado local
+  const toggleExtraAdmin = async (email, isPromovido) => {
+    const e = email.toLowerCase();
+    // Atualiza a UI imediatamente (otimista)
+    setExtraAdmins((prev) => (isPromovido ? prev.filter((x) => x !== e) : [...prev, e]));
+    try {
+      if (isPromovido) {
+        await supaFetch(`sga_extra_admins?email=eq.${encodeURIComponent(e)}`, { method: 'DELETE' });
+      } else {
+        await supaFetch('sga_extra_admins', { method: 'POST', body: JSON.stringify({ email: e }) });
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar auditor promovido no banco:', err);
+      // Reverte a UI se o banco falhar
+      setExtraAdmins((prev) => (isPromovido ? [...prev, e] : prev.filter((x) => x !== e)));
+    }
+  };
 
   const handleLogin = (usuario) => setCurrentUser(usuario);
   const handleLogout = () => setCurrentUser(null);
@@ -375,14 +391,14 @@ export default function AppWrapper() {
       <App
         currentUser={currentUser}
         extraAdmins={extraAdmins}
-        setExtraAdmins={setExtraAdmins}
+        toggleExtraAdmin={toggleExtraAdmin}
         onLogout={handleLogout}
       />
     </ErrorBoundary>
   );
 }
 
-function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
+function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
   // Bug 1 fix: isAdmin calculado aqui dentro, reativo a mudanças em extraAdmins
   const isAdmin = currentUser.role === 'admin' || extraAdmins.includes(currentUser.email.toLowerCase());
   const userSetores = getUserSetores({ ...currentUser, role: isAdmin ? 'admin' : currentUser.role });
@@ -422,11 +438,12 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
 
         // 3. Auditorias salvas (histórico)
         const auditoriasData = await supaFetch(
-          'sga_auditorias?select=id,rai_numero,data_emissao,unidade,status,qtd_nc,sga_setores(nome),sga_auditores(nome)&order=created_at.desc&limit=100'
+          'sga_auditorias?select=id,rai_numero,data_emissao,unidade,status,qtd_nc,auditado_nome,pontos_positivos,observacoes,melhorias,conclusao,sga_setores(nome),sga_auditores(nome)&order=created_at.desc&limit=100'
         );
         if (auditoriasData.length > 0) {
           const mapped = auditoriasData.map((a) => ({
             id: a.id,
+            dbId: a.id,
             raiNumber: a.rai_numero,
             date: a.data_emissao ? new Date(a.data_emissao).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' }) : '—',
             sector: a.sga_setores?.nome || '—',
@@ -434,6 +451,18 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
             auditor: a.sga_auditores?.nome || '—',
             ncCount: a.qtd_nc || 0,
             status: a.status || 'Concluído',
+            // Campos brutos do relatório — usados para reconstruir reportSnapshot no "VER"
+            // sem precisar salvar o objeto inteiro no cliente (checklist ainda é buscado sob demanda)
+            _dbReport: {
+              raiNumber: a.rai_numero,
+              date: a.data_emissao ? new Date(a.data_emissao).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' }) : '',
+              auditor: a.sga_auditores?.nome || '',
+              auditee: a.auditado_nome || '',
+              positivePoints: a.pontos_positivos || '',
+              observations: a.observacoes || '',
+              improvements: a.melhorias || '',
+              conclusion: a.conclusao || ''
+            }
           }));
           setSavedAudits(mapped);
           // Ajusta o contador RAI ao maior número encontrado
@@ -551,19 +580,33 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
 
   // ── ARQUITETURA: auditorias independentes por setor ───────────────────────
   // Cada auditoria tem setor fixo. Estados React separados, sincronizados via useEffect.
+  // Rascunhos ficam 100% no Supabase — nada em localStorage. Cada salvamento (auto
+  // ou manual) INSERE uma versão nova (tabela sga_rascunhos); nunca sobrescreve uma
+  // existente. O app sempre lê a versão mais recente através da view sga_rascunhos_atual.
 
-  // 1. Lista de rascunhos (persiste em localStorage)
-  const [auditorias, setAuditorias] = useState(() => {
-    try {
-      // Usa currentUser.email diretamente da closure do componente pai (App)
-      // Não referencia variáveis declaradas no mesmo escopo para evitar TDZ na minificação
-      const key = 'sga_rascunhos_' + currentUser.email;
-      const raw = localStorage.getItem(key);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      return Object.values(parsed);
-    } catch { return []; }
-  });
+  // 1. Lista de rascunhos — carregada do banco ao montar (sempre a versão mais recente)
+  const [auditorias, setAuditorias] = useState([]);
+  const [rascunhosLoaded, setRascunhosLoaded] = useState(false);
+
+  useEffect(() => {
+    supaFetch(`sga_rascunhos_atual?usuario_email=eq.${encodeURIComponent(currentUser.email)}&select=*`)
+      .then((rows) => {
+        setAuditorias(rows.map((r) => ({
+          localId: r.local_id,
+          dbId: r.id,
+          versao: r.versao,
+          setor: r.setor,
+          raiNumber: r.rai_numero,
+          checklist: r.checklist || [],
+          checklistStatus: r.checklist_status || 'Em Andamento',
+          checklistClosedAt: r.checklist_closed_at,
+          reopenHistory: r.reopen_history || [],
+          report: r.report || {}
+        })));
+      })
+      .catch((err) => console.error('Erro ao carregar rascunhos do banco:', err))
+      .finally(() => setRascunhosLoaded(true));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 2. ID da auditoria aberta (null = nenhuma)
   const [auditoriaAtivaId, setAuditoriaAtivaId] = useState(null);
@@ -581,16 +624,7 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   const [report,            setReport           ] = useState({});
   const [dynamicRaiNumber,  setDynamicRaiNumber ] = useState(`${pad3(1)}/${new Date().getFullYear()}`);
 
-  // 4. Persiste rascunhos sempre que a lista mudar
-  useEffect(() => {
-    try {
-      const map = {};
-      auditorias.forEach(a => { map[a.localId] = a; });
-      localStorage.setItem('sga_rascunhos_' + currentUser.email, JSON.stringify(map));
-    } catch {}
-  }, [auditorias]);
-
-  // 5. Quando a auditoria ativa muda, sincroniza os estados do editor
+  // 4. Quando a auditoria ativa muda, sincroniza os estados do editor
   useEffect(() => {
     const ativa = auditorias.find(a => a.localId === auditoriaAtivaId) || null;
     if (ativa) {
@@ -611,7 +645,7 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
     }
   }, [auditoriaAtivaId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 6. Quando os estados do editor mudam, persiste de volta na lista
+  // 5. Quando os estados do editor mudam, persiste de volta na lista em memória
   useEffect(() => {
     if (!auditoriaAtivaId) return;
     setAuditorias(prev => prev.map(a =>
@@ -626,26 +660,89 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
     ));
   }, [checklist, checklistStatus, checklistClosedAt, reopenHistory, report]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Insere uma nova versão do rascunho no banco (nunca sobrescreve a anterior)
+  const inserirVersaoRascunho = async (ativa) => {
+    const proximaVersao = (ativa.versao || 1) + 1;
+    const [savedRow] = await supaFetch('sga_rascunhos', {
+      method: 'POST',
+      body: JSON.stringify({
+        local_id: ativa.localId,
+        usuario_email: currentUser.email,
+        setor: ativa.setor,
+        rai_numero: ativa.raiNumber,
+        versao: proximaVersao,
+        checklist: ativa.checklist,
+        checklist_status: ativa.checklistStatus,
+        checklist_closed_at: ativa.checklistClosedAt,
+        reopen_history: ativa.reopenHistory,
+        report: ativa.report
+      })
+    });
+    if (savedRow?.id) {
+      setAuditorias(prev => prev.map(a =>
+        a.localId === ativa.localId ? { ...a, dbId: savedRow.id, versao: proximaVersao } : a
+      ));
+    }
+  };
+
+  // 6. Autosave no Supabase — debounced (1.5s de inatividade) para não gerar
+  // uma requisição por tecla digitada. Cada save cria uma versão nova (insert),
+  // nunca sobrescreve a versão anterior. Só roda depois do carregamento inicial.
+  const rascunhoSaveTimer = useRef(null);
+  useEffect(() => {
+    if (!auditoriaAtivaId || !rascunhosLoaded) return;
+    const ativa = auditorias.find(a => a.localId === auditoriaAtivaId);
+    if (!ativa) return;
+
+    setAutoSaveStatus('unsaved');
+    clearTimeout(rascunhoSaveTimer.current);
+    rascunhoSaveTimer.current = setTimeout(async () => {
+      setAutoSaveStatus('saving');
+      try {
+        await inserirVersaoRascunho(ativa);
+        setAutoSaveStatus('saved');
+        setLastSavedAt(new Date());
+      } catch (err) {
+        console.error('Erro ao salvar nova versão do rascunho no banco:', err);
+        setAutoSaveStatus('error');
+      }
+    }, 1500);
+    return () => clearTimeout(rascunhoSaveTimer.current);
+  }, [checklist, checklistStatus, checklistClosedAt, reopenHistory, report]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Indicador de status ───────────────────────────────────────────────────
   const [autoSaveStatus, setAutoSaveStatus] = useState('saved');
   const [lastSavedAt, setLastSavedAt]       = useState(null);
   const markUnsaved = () => setAutoSaveStatus('unsaved');
-  const saveRascunho = () => {
-    setAutoSaveStatus('saved');
-    setLastSavedAt(new Date());
+
+  // Salvamento manual imediato (botão "Salvar Rascunho") — ignora o debounce,
+  // mas segue a mesma regra: insere uma versão nova, nunca sobrescreve.
+  const saveRascunho = async () => {
+    if (!auditoriaAtivaId) return;
+    clearTimeout(rascunhoSaveTimer.current);
+    const ativa = auditorias.find(a => a.localId === auditoriaAtivaId);
+    if (!ativa) return;
+    setAutoSaveStatus('saving');
+    try {
+      await inserirVersaoRascunho(ativa);
+      setAutoSaveStatus('saved');
+      setLastSavedAt(new Date());
+    } catch (err) {
+      console.error('Erro ao salvar nova versão do rascunho no banco:', err);
+      setAutoSaveStatus('error');
+      notify('⚠️ Erro ao salvar rascunho', `Não foi possível salvar no banco. Erro: ${err.message}`);
+    }
   };
-  useEffect(() => {
-    if (auditoriaAtivaId) setAutoSaveStatus('unsaved');
-  }, [checklist, report]);
 
   // ── Criar nova auditoria ─────────────────────────────────────────────────
-  const criarNovaAuditoria = (setor) => {
+  const criarNovaAuditoria = async (setor) => {
     const localId = `aud_${Date.now()}`;
     const raiNum  = `${pad3(raiCounter)}/${currentYear}`;
     const nova = {
       localId,
       setor,
       raiNumber: raiNum,
+      versao: 1,
       checklist: buildChecklist(setor, templateMap),
       checklistStatus: 'Em Andamento',
       checklistClosedAt: null,
@@ -661,19 +758,51 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
     setAuditorias(prev => [...prev, nova]);
     setAuditoriaAtivaId(localId);
     setActiveTab('checklist');
+
+    // Cria a versão 1 no banco imediatamente — antes mesmo do usuário digitar algo
+    try {
+      const [savedRow] = await supaFetch('sga_rascunhos', {
+        method: 'POST',
+        body: JSON.stringify({
+          local_id: localId,
+          usuario_email: currentUser.email,
+          setor: nova.setor,
+          rai_numero: nova.raiNumber,
+          versao: 1,
+          checklist: nova.checklist,
+          checklist_status: nova.checklistStatus,
+          reopen_history: nova.reopenHistory,
+          report: nova.report
+        })
+      });
+      if (savedRow?.id) {
+        setAuditorias(prev => prev.map(a => a.localId === localId ? { ...a, dbId: savedRow.id } : a));
+      }
+    } catch (err) {
+      console.error('Erro ao criar rascunho no banco:', err);
+      notify('⚠️ Rascunho não salvo no banco', `A auditoria foi criada apenas nesta tela. Erro: ${err.message}. Tente recarregar a página.`);
+    }
   };
 
   // ── Remover rascunho ─────────────────────────────────────────────────────
-  const removerRascunho = (localId) => {
+  // Apaga TODAS as versões desse rascunho no banco (é um descarte intencional,
+  // diferente do autosave — aqui não faz sentido manter histórico).
+  const removerRascunho = async (localId) => {
     setAuditorias(prev => prev.filter(a => a.localId !== localId));
     if (auditoriaAtivaId === localId) {
       setAuditoriaAtivaId(null);
       setActiveTab('minhas_auditorias');
     }
+    try {
+      await supaFetch(`sga_rascunhos?local_id=eq.${encodeURIComponent(localId)}`, { method: 'DELETE' });
+    } catch (err) {
+      console.error('Erro ao excluir rascunho do banco:', err);
+    }
   };
 
   const [rncs, setRncs] = useState([]);
   const [savedAudits, setSavedAudits] = useState([]);
+  const [loadingAuditId, setLoadingAuditId] = useState(null);
   const [historySearch, setHistorySearch] = useState('');
   const [historyPage, setHistoryPage]     = useState(1);
   const HISTORY_PAGE_SIZE = 8;
@@ -944,9 +1073,11 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
     let dbId = isEditing ? editingAuditId : null;
     try {
       const setorRow = sectors.find((s) => s.nome === sectorSnapshot);
+      const auditorRow = [{ id: 1, nome: 'Luciene Batista' }].find((a) => a.nome === reportSnapshot.auditor);
       const auditoriaPayload = {
         rai_numero:       raiSnapshot,
         setor_id:         setorRow?.id || null,
+        auditor_id:       auditorRow?.id || null,
         unidade:          branchSnapshot,
         auditado_nome:    reportSnapshot.auditee,
         data_emissao:     reportSnapshot.date,
@@ -1032,6 +1163,13 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
     // Remove auditoria da lista de rascunhos em andamento (foi concluída)
     if (!isEditing && auditoriaAtivaId) {
       setAuditorias(prev => prev.filter(a => a.localId !== auditoriaAtivaId));
+      // Apaga TODAS as versões do rascunho no banco — a auditoria já está definitivamente
+      // salva em sga_auditorias, não faz sentido manter o histórico de rascunho
+      try {
+        await supaFetch(`sga_rascunhos?local_id=eq.${encodeURIComponent(auditoriaAtivaId)}`, { method: 'DELETE' });
+      } catch (err) {
+        console.error('Erro ao excluir rascunho concluído do banco:', err);
+      }
     }
     setAuditoriaAtivaId(null);
     setActiveTab('minhas_auditorias');
@@ -1040,11 +1178,39 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   };
 
   // Carrega uma auditoria do histórico no modo de VISUALIZAÇÃO (somente leitura)
-  const loadAudit = (audit, modoEditar = false) => {
-    if (audit.checklistSnapshot) setChecklist(audit.checklistSnapshot);
-    if (audit.reportSnapshot) setReport(audit.reportSnapshot);
+  const loadAudit = async (audit, modoEditar = false) => {
     setSelectedSector(audit.sector);
     setSelectedBranch(audit.branch);
+
+    if (audit.checklistSnapshot && audit.reportSnapshot) {
+      // Auditoria criada/editada nesta mesma sessão — já tem tudo em memória
+      setChecklist(audit.checklistSnapshot);
+      setReport(audit.reportSnapshot);
+    } else {
+      // Auditoria veio do histórico do banco (ex.: após recarregar a página) —
+      // checklistSnapshot/reportSnapshot não existem localmente, então busca sob demanda
+      setLoadingAuditId(audit.id);
+      try {
+        const itensData = await supaFetch(
+          `sga_checklist_itens?auditoria_id=eq.${audit.dbId || audit.id}&select=ordem,pergunta,avaliacao,comentarios&order=ordem`
+        );
+        const checklistFromDb = itensData.map((it, idx) => ({
+          id: idx + 1,
+          question: it.pergunta,
+          status: it.avaliacao || '',
+          comments: it.comentarios || ''
+        }));
+        setChecklist(checklistFromDb);
+        setReport(audit._dbReport || {});
+      } catch (err) {
+        console.error('Erro ao carregar detalhes da auditoria:', err);
+        notify('Não foi possível carregar', 'Não foi possível buscar os detalhes desta auditoria no banco. Tente novamente.');
+        setLoadingAuditId(null);
+        return;
+      }
+      setLoadingAuditId(null);
+    }
+
     if (modoEditar && isAdmin) {
       // Modo edição: desbloqueia o checklist para a Luciene corrigir
       setChecklistStatus('Em Andamento');
@@ -2798,9 +2964,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
                     <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() => loadAudit(audit)}
-                        className="bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-600 hover:text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm"
+                        disabled={loadingAuditId === audit.id}
+                        className="bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-600 hover:text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm disabled:opacity-50 disabled:cursor-wait"
                       >
-                        VER
+                        {loadingAuditId === audit.id ? '...' : 'VER'}
                       </button>
                       {isAdmin && (
                         <button
@@ -3626,12 +3793,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                       <p className="text-xs text-slate-500">{u.email} · <span className="text-indigo-600">{u.setor}</span></p>
                     </div>
                     <button
-                      onClick={() => {
-                        const email = u.email.toLowerCase();
-                        setExtraAdmins((prev) =>
-                          isPromovido ? prev.filter((e) => e !== email) : [...prev, email]
-                        );
-                      }}
+                      onClick={() => toggleExtraAdmin(u.email, isPromovido)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
                         isPromovido
                           ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-rose-600 hover:border-rose-600'
