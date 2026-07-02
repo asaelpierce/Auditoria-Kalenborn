@@ -12,6 +12,29 @@ import * as XLSX from 'xlsx'
 const KALEN_LOGO_SRC        = '/logo-preta.png';
 const KALEN_LOGO_BRANCA_SRC = '/logo-branca.png';
 
+// ErrorBoundary — captura erros de render e mostra mensagem em vez de tela branca
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 40, fontFamily: 'sans-serif', background: '#fff1f2', minHeight: '100vh' }}>
+          <h2 style={{ color: '#be123c', marginBottom: 12 }}>⚠️ Erro na renderização</h2>
+          <p style={{ color: '#881337', marginBottom: 8 }}>Copie a mensagem abaixo e envie para o suporte:</p>
+          <pre style={{ background: '#ffe4e6', padding: 16, borderRadius: 8, fontSize: 13, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+            {this.state.error?.toString()}{'\n\n'}{this.state.error?.stack}
+          </pre>
+          <button onClick={() => this.setState({ error: null })} style={{ marginTop: 16, padding: '8px 20px', background: '#be123c', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}>
+            Tentar novamente
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const KalenLogo = ({ variant = 'full', className = '' }) => {
   if (variant === 'sidebar') {
     return (
@@ -366,16 +389,22 @@ export default function AppWrapper() {
   const handleLogout = () => setCurrentUser(null);
 
   if (!currentUser) {
-    return <LoginScreen onLogin={handleLogin} extraAdmins={extraAdmins} />;
+    return (
+      <ErrorBoundary>
+        <LoginScreen onLogin={handleLogin} extraAdmins={extraAdmins} />
+      </ErrorBoundary>
+    );
   }
 
   return (
-    <App
-      currentUser={currentUser}
-      extraAdmins={extraAdmins}
-      setExtraAdmins={setExtraAdmins}
-      onLogout={handleLogout}
-    />
+    <ErrorBoundary>
+      <App
+        currentUser={currentUser}
+        extraAdmins={extraAdmins}
+        setExtraAdmins={setExtraAdmins}
+        onLogout={handleLogout}
+      />
+    </ErrorBoundary>
   );
 }
 
