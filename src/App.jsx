@@ -582,35 +582,30 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   const today = new Date();
   const formattedDate = today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
-  // ── ARQUITETURA: cada auditoria é um objeto independente ──────────────────
-  // auditoriaAtiva: { localId, setor, raiNumber, checklist, checklistStatus,
-  //                   checklistClosedAt, reopenHistory, report }
-  // O setor fica TRAVADO ao criar — não pode mudar depois.
-  // Rascunho salvo por localId (não por email global).
+  // ── ARQUITETURA: auditorias independentes por setor ───────────────────────
+  // Cada auditoria tem setor fixo. Estados React separados, sincronizados via useEffect.
 
-  // Persiste todas as auditorias em andamento sempre que mudar
-  useEffect(() => {
-    try {
-      const map = {};
-      auditorias.forEach(a => { map[a.localId] = a; });
-      localStorage.setItem(`sga_rascunhos_${currentUser.email}`, JSON.stringify(map));
-    } catch {}
-  }, [auditorias]);  // Lista de auditorias em andamento (cada uma com seu estado completo)
+  // 1. Lista de rascunhos (persiste em localStorage)
   const [auditorias, setAuditorias] = useState(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(`sga_rascunhos_${currentUser.email}`) || '{}');
-      return Object.values(saved);
+      const raw = localStorage.getItem(`sga_rascunhos_${currentUser.email}`);
+      return raw ? Object.values(JSON.parse(raw)) : [];
     } catch { return []; }
   });
 
-  // Auditoria atualmente aberta no editor (null = nenhuma)
+  // 2. ID da auditoria aberta (null = nenhuma)
   const [auditoriaAtivaId, setAuditoriaAtivaId] = useState(null);
-  const auditoriaAtiva = useMemo(
-    () => auditorias.find(a => a.localId === auditoriaAtivaId) || null,
-    [auditorias, auditoriaAtivaId]
-  );
 
-  // Persiste todas as auditorias em andamento sempre que mudar
+  // 3. Estados independentes do editor — iniciam vazios, sincronizam com a ativa
+  const [checklist,         setChecklist        ] = useState([]);
+  const [selectedSector,    setSelectedSector   ] = useState('COMERCIAL');
+  const [checklistStatus,   setChecklistStatus  ] = useState('Em Andamento');
+  const [checklistClosedAt, setChecklistClosedAt] = useState(null);
+  const [reopenHistory,     setReopenHistory    ] = useState([]);
+  const [report,            setReport           ] = useState({});
+  const [dynamicRaiNumber,  setDynamicRaiNumber ] = useState(`${pad3(1)}/${new Date().getFullYear()}`);
+
+  // 4. Persiste rascunhos sempre que a lista mudar
   useEffect(() => {
     try {
       const map = {};
@@ -619,53 +614,63 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
     } catch {}
   }, [auditorias]);
 
-  // ── Estados de status ─────────────────────────────────────────────────────
+  // 5. Quando a auditoria ativa muda, sincroniza os estados do editor
+  useEffect(() => {
+    const ativa = auditorias.find(a => a.localId === auditoriaAtivaId) || null;
+    if (ativa) {
+      setChecklist(ativa.checklist || []);
+      setSelectedSector(ativa.setor || 'COMERCIAL');
+      setChecklistStatus(ativa.checklistStatus || 'Em Andamento');
+      setChecklistClosedAt(ativa.checklistClosedAt ? new Date(ativa.checklistClosedAt) : null);
+      setReopenHistory(ativa.reopenHistory || []);
+      setReport(ativa.report || {});
+      setDynamicRaiNumber(ativa.raiNumber || `${pad3(raiCounter)}/${currentYear}`);
+    } else {
+      setChecklist([]);
+      setSelectedSector('COMERCIAL');
+      setChecklistStatus('Em Andamento');
+      setChecklistClosedAt(null);
+      setReopenHistory([]);
+      setReport({});
+    }
+  }, [auditoriaAtivaId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 6. Quando os estados do editor mudam, persiste de volta na lista
+  useEffect(() => {
+    if (!auditoriaAtivaId) return;
+    setAuditorias(prev => prev.map(a =>
+      a.localId !== auditoriaAtivaId ? a : {
+        ...a,
+        checklist,
+        checklistStatus,
+        checklistClosedAt: checklistClosedAt ? checklistClosedAt.toISOString() : null,
+        reopenHistory,
+        report
+      }
+    ));
+  }, [checklist, checklistStatus, checklistClosedAt, reopenHistory, report]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 7. Helper para auditoria ativa (não cria closures problemáticas)
+  const auditoriaAtiva = auditorias.find(a => a.localId === auditoriaAtivaId) || null;
+
+  const usingGenericChecklist = !templateMap[selectedSector];
+
+  // ── Indicador de status ───────────────────────────────────────────────────
   const [autoSaveStatus, setAutoSaveStatus] = useState('saved');
   const [lastSavedAt, setLastSavedAt]       = useState(null);
   const markUnsaved = () => setAutoSaveStatus('unsaved');
-
-  // Salva rascunho manualmente
   const saveRascunho = () => {
-    try {
-      setAutoSaveStatus('saved');
-      setLastSavedAt(new Date());
-    } catch { setAutoSaveStatus('error'); }
+    setAutoSaveStatus('saved');
+    setLastSavedAt(new Date());
   };
-
-  // Marca unsaved quando auditoria ativa muda
   useEffect(() => {
     if (auditoriaAtivaId) setAutoSaveStatus('unsaved');
-  }, [auditorias]);
-
-  // Helper: atualiza um campo da auditoria ativa
-  const updateAtiva = useCallback((patch) => {
-    setAuditorias(prev => prev.map(a =>
-      a.localId === auditoriaAtivaId ? { ...a, ...patch } : a
-    ));
-  }, [auditoriaAtivaId]);
-
-  // Getters derivados — todos via useMemo para evitar TDZ na minificação
-  const checklist         = useMemo(() => auditoriaAtiva?.checklist        || [], [auditoriaAtiva]);
-  const selectedSector    = useMemo(() => auditoriaAtiva?.setor            || 'COMERCIAL', [auditoriaAtiva]);
-  const checklistStatus   = useMemo(() => auditoriaAtiva?.checklistStatus  || 'Em Andamento', [auditoriaAtiva]);
-  const checklistClosedAt = useMemo(() => auditoriaAtiva?.checklistClosedAt ? new Date(auditoriaAtiva.checklistClosedAt) : null, [auditoriaAtiva]);
-  const reopenHistory     = useMemo(() => auditoriaAtiva?.reopenHistory    || [], [auditoriaAtiva]);
-  const report            = useMemo(() => auditoriaAtiva?.report           || {}, [auditoriaAtiva]);
-  const dynamicRaiNumber  = useMemo(() => auditoriaAtiva?.raiNumber        || `${pad3(raiCounter)}/${currentYear}`, [auditoriaAtiva, raiCounter, currentYear]);
-  const usingGenericChecklist = useMemo(() => !templateMap[auditoriaAtiva?.setor || 'COMERCIAL'], [templateMap, auditoriaAtiva]);
-
-  // Setters que escrevem na auditoria ativa
-  const setChecklist        = useCallback((v) => updateAtiva({ checklist:        typeof v === 'function' ? v(auditoriaAtiva?.checklist        || []) : v }), [updateAtiva, auditoriaAtiva]);
-  const setChecklistStatus  = useCallback((v) => updateAtiva({ checklistStatus:  typeof v === 'function' ? v(auditoriaAtiva?.checklistStatus  || 'Em Andamento') : v }), [updateAtiva, auditoriaAtiva]);
-  const setChecklistClosedAt= useCallback((v) => updateAtiva({ checklistClosedAt: v ? (v instanceof Date ? v.toISOString() : v) : null }), [updateAtiva]);
-  const setReopenHistory    = useCallback((v) => updateAtiva({ reopenHistory:    typeof v === 'function' ? v(auditoriaAtiva?.reopenHistory    || []) : v }), [updateAtiva, auditoriaAtiva]);
-  const setReport           = useCallback((v) => updateAtiva({ report:           typeof v === 'function' ? v(auditoriaAtiva?.report           || {}) : v }), [updateAtiva, auditoriaAtiva]);
-  const setSelectedSector   = useCallback(() => {}, []); // setor é imutável
+  }, [checklist, report]);
 
   // ── Criar nova auditoria ─────────────────────────────────────────────────
   const criarNovaAuditoria = (setor) => {
-    const localId  = `aud_${Date.now()}`;
-    const raiNum   = `${pad3(raiCounter)}/${currentYear}`;
+    const localId = `aud_${Date.now()}`;
+    const raiNum  = `${pad3(raiCounter)}/${currentYear}`;
     const nova = {
       localId,
       setor,
@@ -687,7 +692,7 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
     setActiveTab('checklist');
   };
 
-  // ── Remover auditoria em andamento da lista local ────────────────────────
+  // ── Remover rascunho ─────────────────────────────────────────────────────
   const removerRascunho = (localId) => {
     setAuditorias(prev => prev.filter(a => a.localId !== localId));
     if (auditoriaAtivaId === localId) {
@@ -701,9 +706,9 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   const [historySearch, setHistorySearch] = useState('');
   const [historyPage, setHistoryPage]     = useState(1);
   const HISTORY_PAGE_SIZE = 8;
-  const [rncStatusFilter, setRncStatusFilter]   = useState('Todas');
-  const [historyNcFilter, setHistoryNcFilter]   = useState('Todas');
-  const [editingAuditId, setEditingAuditId] = useState(null);
+  const [rncStatusFilter, setRncStatusFilter] = useState('Todas');
+  const [historyNcFilter, setHistoryNcFilter] = useState('Todas');
+  const [editingAuditId, setEditingAuditId]   = useState(null);
 
   const [calendarView, setCalendarView] = useState('month');
   const [calendarAnchor, setCalendarAnchor] = useState(new Date());
