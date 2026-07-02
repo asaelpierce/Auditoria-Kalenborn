@@ -588,8 +588,13 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   // 1. Lista de rascunhos (persiste em localStorage)
   const [auditorias, setAuditorias] = useState(() => {
     try {
-      const raw = localStorage.getItem(`sga_rascunhos_${currentUser.email}`);
-      return raw ? Object.values(JSON.parse(raw)) : [];
+      // Usa currentUser.email diretamente da closure do componente pai (App)
+      // Não referencia variáveis declaradas no mesmo escopo para evitar TDZ na minificação
+      const key = 'sga_rascunhos_' + currentUser.email;
+      const raw = localStorage.getItem(key);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Object.values(parsed);
     } catch { return []; }
   });
 
@@ -610,7 +615,7 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
     try {
       const map = {};
       auditorias.forEach(a => { map[a.localId] = a; });
-      localStorage.setItem(`sga_rascunhos_${currentUser.email}`, JSON.stringify(map));
+      localStorage.setItem('sga_rascunhos_' + currentUser.email, JSON.stringify(map));
     } catch {}
   }, [auditorias]);
 
@@ -649,11 +654,6 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
       }
     ));
   }, [checklist, checklistStatus, checklistClosedAt, reopenHistory, report]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // 7. Helper para auditoria ativa (não cria closures problemáticas)
-  const auditoriaAtiva = auditorias.find(a => a.localId === auditoriaAtivaId) || null;
-
-  const usingGenericChecklist = !templateMap[selectedSector];
 
   // ── Indicador de status ───────────────────────────────────────────────────
   const [autoSaveStatus, setAutoSaveStatus] = useState('saved');
@@ -856,6 +856,10 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
 
   const [confirmAction, setConfirmAction] = useState(null);
 
+  // ── Derivadas — declaradas DEPOIS de todos os useState ───────────────────
+  // Isso evita TDZ na minificação (Vite/Rollup reorganiza closures)
+  const auditoriaAtiva     = auditorias.find(a => a.localId === auditoriaAtivaId) || null;
+  const usingGenericChecklist = !templateMap[selectedSector];
 
   const requestConfirm = (config) => setConfirmAction(config);
   const closeConfirm = () => setConfirmAction(null);
