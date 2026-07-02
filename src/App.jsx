@@ -919,23 +919,93 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
     const isEditing = !!editingAuditId;
     const localId = isEditing ? editingAuditId : Date.now();
 
+    // Captura snapshot dos dados ANTES de qualquer alteração de estado
+    const checklistSnapshot = JSON.parse(JSON.stringify(checklist));
+    const reportSnapshot    = JSON.parse(JSON.stringify(report));
+    const sectorSnapshot    = selectedSector;
+    const branchSnapshot    = selectedBranch;
+    const ncCountSnapshot   = getNcCount();
+    const raiSnapshot       = report.raiNumber;
+
+    // ── PASSO 1: Salva no Supabase ──────────────────────────────────────
+    // Só avança se o banco confirmar. Se falhar, mostra erro e NÃO limpa nada.
+    let dbId = isEditing ? editingAuditId : null;
+    try {
+      const setorRow = sectors.find((s) => s.nome === sectorSnapshot);
+      const auditoriaPayload = {
+        rai_numero:       raiSnapshot,
+        setor_id:         setorRow?.id || null,
+        unidade:          branchSnapshot,
+        auditado_nome:    reportSnapshot.auditee,
+        data_emissao:     reportSnapshot.date,
+        status_checklist: 'Fechado',
+        pontos_positivos: reportSnapshot.positivePoints,
+        observacoes:      reportSnapshot.observations,
+        melhorias:        reportSnapshot.improvements,
+        conclusao:        reportSnapshot.conclusion,
+        qtd_nc:           ncCountSnapshot,
+        status:           'Concluído'
+      };
+
+      if (isEditing && typeof editingAuditId === 'number') {
+        await supaFetch(`sga_auditorias?id=eq.${editingAuditId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(auditoriaPayload)
+        });
+        await supaFetch(`sga_checklist_itens?auditoria_id=eq.${editingAuditId}`, { method: 'DELETE' });
+      } else {
+        const [savedAuditDb] = await supaFetch('sga_auditorias', {
+          method: 'POST',
+          body: JSON.stringify(auditoriaPayload)
+        });
+        if (savedAuditDb?.id) {
+          dbId = savedAuditDb.id;
+        } else {
+          throw new Error('Banco não retornou ID da auditoria. Verifique as permissões do Supabase.');
+        }
+      }
+
+      if (dbId) {
+        const itensPayload = checklistSnapshot.map((item, idx) => ({
+          auditoria_id: dbId,
+          ordem:        idx + 1,
+          pergunta:     item.question,
+          avaliacao:    item.status || '',
+          comentarios:  item.comments
+        }));
+        await supaFetch('sga_checklist_itens', {
+          method: 'POST',
+          body: JSON.stringify(itensPayload)
+        });
+      }
+
+    } catch (err) {
+      // Banco falhou — NÃO limpa nada, NÃO reseta o checklist
+      console.error('Erro ao persistir auditoria no Supabase:', err);
+      notify(
+        '⚠️ Erro ao salvar no banco',
+        `Os dados NÃO foram salvos no banco. Não feche o navegador. Erro: ${err.message}. Tente novamente ou contate o suporte.`
+      );
+      return; // ← sai da função sem limpar nada
+    }
+
+    // ── PASSO 2: Banco confirmado — agora atualiza a UI e limpa o rascunho ──
     const auditData = {
-      id: localId,
-      dbId: isEditing ? editingAuditId : undefined,
-      isLocal: !isEditing,
-      raiNumber: report.raiNumber,
-      date: formattedDate,
-      sector: selectedSector,
-      branch: selectedBranch,
-      auditor: report.auditor,
-      ncCount: getNcCount(),
-      status: 'Concluído',
-      checklistSnapshot: JSON.parse(JSON.stringify(checklist)),
-      reportSnapshot: JSON.parse(JSON.stringify(report))
+      id:               dbId || localId,
+      dbId:             dbId,
+      isLocal:          false,
+      raiNumber:        raiSnapshot,
+      date:             formattedDate,
+      sector:           sectorSnapshot,
+      branch:           branchSnapshot,
+      auditor:          reportSnapshot.auditor,
+      ncCount:          ncCountSnapshot,
+      status:           'Concluído',
+      checklistSnapshot,
+      reportSnapshot
     };
 
     if (isEditing) {
-      // Modo edição: atualiza a auditoria existente na lista
       setSavedAudits((prev) => prev.map((a) =>
         (a.dbId === editingAuditId || a.id === editingAuditId) ? { ...a, ...auditData } : a
       ));
@@ -949,84 +1019,27 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
     setLastSavedAt(new Date());
     setActiveTab('gestao');
 
-    // Limpa o rascunho — começa nova auditoria do zero
+    // Reseta para nova auditoria (só aqui, após confirmação do banco)
     const nextRaiNumber = `${pad3(raiCounter + (isEditing ? 0 : 1))}/${currentYear}`;
-    const freshChecklist = buildChecklist(selectedSector, templateMap);
+    const freshChecklist = buildChecklist(sectorSnapshot, templateMap);
     setChecklist(freshChecklist);
     setChecklistStatus('Em Andamento');
     setChecklistClosedAt(null);
     setReopenHistory([]);
     setReport({
       raiNumber: nextRaiNumber,
-      date: today.toISOString().split('T')[0],
-      auditor: report.auditor,
+      date:      today.toISOString().split('T')[0],
+      auditor:   reportSnapshot.auditor,
       auditee: '', positivePoints: '', observations: '', improvements: '', conclusion: ''
     });
+
+    // Limpa localStorage só após tudo confirmado
     try {
       ['checklist','checklistStatus','checklistClosedAt','reopenHistory','report']
         .forEach((k) => localStorage.removeItem(lsKey(k)));
     } catch {}
 
-
-    // Persiste no Supabase em background (não bloqueia a UI)
-    try {
-      const setorRow = sectors.find((s) => s.nome === selectedSector);
-      const auditoriaPayload = {
-        rai_numero: report.raiNumber,
-        setor_id: setorRow?.id || null,
-        unidade: selectedBranch,
-        auditado_nome: report.auditee,
-        data_emissao: report.date,
-        status_checklist: 'Fechado',
-        pontos_positivos: report.positivePoints,
-        observacoes: report.observations,
-        melhorias: report.improvements,
-        conclusao: report.conclusion,
-        qtd_nc: getNcCount(),
-        status: 'Concluído'
-      };
-
-      let dbId = isEditing ? editingAuditId : null;
-
-      if (isEditing && typeof editingAuditId === 'number') {
-        // Atualiza auditoria existente no banco
-        await supaFetch(`sga_auditorias?id=eq.${editingAuditId}`, {
-          method: 'PATCH',
-          body: JSON.stringify(auditoriaPayload)
-        });
-        // Remove itens antigos e reinserção com dados atualizados
-        await supaFetch(`sga_checklist_itens?auditoria_id=eq.${editingAuditId}`, { method: 'DELETE' });
-      } else {
-        // Nova auditoria
-        const [savedAuditDb] = await supaFetch('sga_auditorias', {
-          method: 'POST',
-          body: JSON.stringify(auditoriaPayload)
-        });
-        if (savedAuditDb?.id) {
-          dbId = savedAuditDb.id;
-          setSavedAudits((prev) => prev.map((a) =>
-            a.id === localId ? { ...a, isLocal: false, dbId: savedAuditDb.id } : a
-          ));
-        }
-      }
-
-      if (dbId) {
-        const itensPayload = checklist.map((item, idx) => ({
-          auditoria_id: dbId,
-          ordem: idx + 1,
-          pergunta: item.question,
-          avaliacao: item.status || '',
-          comentarios: item.comments
-        }));
-        await supaFetch('sga_checklist_itens', {
-          method: 'POST',
-          body: JSON.stringify(itensPayload)
-        });
-      }
-
-    } catch (err) {
-      console.error('Erro ao persistir auditoria no Supabase:', err);
-    }
+    notify('✓ Auditoria salva', `RAI Nº ${raiSnapshot} registrada com sucesso no banco de dados.`);
   };
 
   // Carrega uma auditoria do histórico no modo de VISUALIZAÇÃO (somente leitura)
@@ -1104,6 +1117,7 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
         });
       } catch (err) {
         console.error(`Erro ao salvar RNC campo ${field}:`, err);
+        notify('⚠️ Erro ao salvar RNC', `Não foi possível salvar o campo "${field}" no banco. Erro: ${err.message}`);
       }
     }, delay);
   };
@@ -1163,6 +1177,7 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
       }
     } catch (err) {
       console.error('Erro ao criar RNC no banco:', err);
+      notify('⚠️ Erro ao criar RNC', `RNC criada localmente mas não registrada no banco. Erro: ${err.message}`);
     }
   };
 
@@ -1223,6 +1238,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
       }
     } catch (err) {
       console.error('Erro ao persistir evento:', err);
+      notify('⚠️ Erro ao salvar evento', `Evento salvo localmente mas não registrado no banco. Erro: ${err.message}`);
     }
     return null;
   };
