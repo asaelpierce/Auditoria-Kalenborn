@@ -543,11 +543,6 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   // Lista de nomes de setores para os dropdowns
   const SECTORS = sectors.map((s) => s.nome);
 
-  // Requisitos do setor selecionado (mostrado no cabeçalho do checklist e RAI)
-  const selectedSectorRequisitos = sectors.find((s) => s.nome === selectedSector)?.requisitos || '';
-
-
-
   const [raiCounter, setRaiCounter] = useState(1);
   const [rncCounter, setRncCounter] = useState(1);
   const currentYear = new Date().getFullYear();
@@ -576,6 +571,10 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   // 3. Estados independentes do editor — iniciam vazios, sincronizam com a ativa
   const [checklist,         setChecklist        ] = useState([]);
   const [selectedSector,    setSelectedSector   ] = useState('COMERCIAL');
+
+  // Requisitos do setor selecionado (mostrado no cabeçalho do checklist e RAI)
+  const selectedSectorRequisitos = sectors.find((s) => s.nome === selectedSector)?.requisitos || '';
+
   const [checklistStatus,   setChecklistStatus  ] = useState('Em Andamento');
   const [checklistClosedAt, setChecklistClosedAt] = useState(null);
   const [reopenHistory,     setReopenHistory    ] = useState([]);
