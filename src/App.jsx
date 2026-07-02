@@ -413,11 +413,9 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   const isAdmin = currentUser.role === 'admin' || extraAdmins.includes(currentUser.email.toLowerCase());
   const userSetores = getUserSetores({ ...currentUser, role: isAdmin ? 'admin' : currentUser.role });
 
-  const [activeTab, setActiveTab] = useState(isAdmin ? 'dashboard' : 'documentos');
+  const [activeTab, setActiveTab] = useState(isAdmin ? 'minhas_auditorias' : 'documentos');
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [selectedSector, setSelectedSector] = useState('COMERCIAL');
   const [selectedBranch, setSelectedBranch] = useState(BRANCHES[0]);
-
 
   // ---- Dados dinâmicos vindos do Supabase ----
   // sectors: [{ nome, requisitos }]  |  templateMap: { 'SETOR': ['pergunta1', ...] }
@@ -581,127 +579,150 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   const [raiCounter, setRaiCounter] = useState(1);
   const [rncCounter, setRncCounter] = useState(1);
   const currentYear = new Date().getFullYear();
-  const dynamicRaiNumber = `${pad3(raiCounter)}/${currentYear}`;
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
-  // ---- Rascunho da auditoria em andamento — persiste em localStorage ----
-  // Isso garante que fechar a aba acidentalmente não perde o trabalho.
-  const lsKey = (k) => `sga_draft_${currentUser.email}_${k}`;
+  // ── ARQUITETURA: cada auditoria é um objeto independente ──────────────────
+  // auditoriaAtiva: { localId, setor, raiNumber, checklist, checklistStatus,
+  //                   checklistClosedAt, reopenHistory, report }
+  // O setor fica TRAVADO ao criar — não pode mudar depois.
+  // Rascunho salvo por localId (não por email global).
 
-  const [checklist, setChecklist] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(lsKey('checklist'))) || buildChecklist('COMERCIAL'); }
-    catch { return buildChecklist('COMERCIAL'); }
+  const lsAuditorias = `sga_rascunhos_${currentUser.email}`;
+
+  // Carrega mapa de rascunhos em andamento do localStorage
+  const loadRascunhos = () => {
+    try { return JSON.parse(localStorage.getItem(lsAuditorias) || '{}'); } catch { return {}; }
+  };
+  const saveRascunhos = (map) => {
+    try { localStorage.setItem(lsAuditorias, JSON.stringify(map)); } catch {}
+  };
+
+  // Lista de auditorias em andamento (cada uma com seu estado completo)
+  const [auditorias, setAuditorias] = useState(() => {
+    const saved = loadRascunhos();
+    const lista = Object.values(saved);
+    // Migração: se havia rascunho no formato antigo, converte
+    try {
+      const oldChecklist = localStorage.getItem(`sga_draft_${currentUser.email}_checklist`);
+      const oldSector    = localStorage.getItem(`sga_draft_${currentUser.email}_sector`) || 'COMERCIAL';
+      const oldReport    = localStorage.getItem(`sga_draft_${currentUser.email}_report`);
+      const oldStatus    = localStorage.getItem(`sga_draft_${currentUser.email}_checklistStatus`) || 'Em Andamento';
+      if (oldChecklist && lista.length === 0) {
+        const migrated = {
+          localId: 'migrado_1',
+          setor: oldSector,
+          raiNumber: `001/${new Date().getFullYear()}`,
+          checklist: JSON.parse(oldChecklist),
+          checklistStatus: oldStatus,
+          checklistClosedAt: null,
+          reopenHistory: [],
+          report: oldReport ? JSON.parse(oldReport) : {}
+        };
+        return [migrated];
+      }
+    } catch {}
+    return lista;
   });
-  const [selectedSectorDraft, setSelectedSectorDraft] = useState(() => {
-    try { return localStorage.getItem(lsKey('sector')) || 'COMERCIAL'; }
-    catch { return 'COMERCIAL'; }
-  });
 
-  // Sincroniza selectedSector com o rascunho persistido
+  // Auditoria atualmente aberta no editor (null = nenhuma)
+  const [auditoriaAtivaId, setAuditoriaAtivaId] = useState(null);
+  const auditoriaAtiva = auditorias.find(a => a.localId === auditoriaAtivaId) || null;
+
+  // Persiste todas as auditorias em andamento sempre que mudar
   useEffect(() => {
-    if (selectedSectorDraft !== selectedSector) setSelectedSector(selectedSectorDraft);
-  }, []);
+    const map = {};
+    auditorias.forEach(a => { map[a.localId] = a; });
+    saveRascunhos(map);
+  }, [auditorias]);
+
+  // Helper: atualiza um campo da auditoria ativa
+  const updateAtiva = (patch) => {
+    setAuditorias(prev => prev.map(a =>
+      a.localId === auditoriaAtivaId ? { ...a, ...patch } : a
+    ));
+  };
+
+  // Getters que lêem da auditoria ativa (compatibilidade com o restante do código)
+  const checklist        = auditoriaAtiva?.checklist        || [];
+  const selectedSector   = auditoriaAtiva?.setor            || 'COMERCIAL';
+  const checklistStatus  = auditoriaAtiva?.checklistStatus  || 'Em Andamento';
+  const checklistClosedAt= auditoriaAtiva?.checklistClosedAt ? new Date(auditoriaAtiva.checklistClosedAt) : null;
+  const reopenHistory    = auditoriaAtiva?.reopenHistory    || [];
+  const report           = auditoriaAtiva?.report           || {};
+
+  // Setters que escrevem na auditoria ativa
+  const setChecklist       = (v) => updateAtiva({ checklist: typeof v === 'function' ? v(checklist) : v });
+  const setChecklistStatus = (v) => updateAtiva({ checklistStatus: typeof v === 'function' ? v(checklistStatus) : v });
+  const setChecklistClosedAt=(v) => updateAtiva({ checklistClosedAt: v ? (v instanceof Date ? v.toISOString() : v) : null });
+  const setReopenHistory   = (v) => updateAtiva({ reopenHistory: typeof v === 'function' ? v(reopenHistory) : v });
+  const setReport          = (v) => updateAtiva({ report: typeof v === 'function' ? v(report) : v });
+  const setSelectedSector  = () => {}; // setor é imutável após criar — não faz nada
 
   const usingGenericChecklist = !templateMap[selectedSector];
 
-  const [checklistStatus, setChecklistStatus] = useState(() => {
-    try { return localStorage.getItem(lsKey('checklistStatus')) || 'Em Andamento'; }
-    catch { return 'Em Andamento'; }
-  });
-  const [checklistClosedAt, setChecklistClosedAt] = useState(() => {
-    try {
-      const v = localStorage.getItem(lsKey('checklistClosedAt'));
-      return v ? new Date(v) : null;
-    } catch { return null; }
-  });
-  const [reopenHistory, setReopenHistory] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(lsKey('reopenHistory')) || '[]'); }
-    catch { return []; }
-  });
+  const dynamicRaiNumber = auditoriaAtiva?.raiNumber || `${pad3(raiCounter)}/${currentYear}`;
 
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString('pt-BR', {
-    day: '2-digit', month: '2-digit', year: '2-digit'
-  });
-
-  const [report, setReport] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(lsKey('report')));
-      return saved || {
-        raiNumber: dynamicRaiNumber,
-        date: today.toISOString().split('T')[0],
-        auditor: currentUser.nome || AUDITORES[0],
-        auditee: '', positivePoints: '', observations: '', improvements: '', conclusion: ''
-      };
-    } catch {
-      return {
-        raiNumber: dynamicRaiNumber,
-        date: today.toISOString().split('T')[0],
-        auditor: currentUser.nome || AUDITORES[0],
-        auditee: '', positivePoints: '', observations: '', improvements: '', conclusion: ''
-      };
-    }
-  });
-
-  // Persiste o rascunho automaticamente em localStorage sempre que mudar
-  // e marca como "não salvo" para o indicador de status
-  useEffect(() => {
-    try { localStorage.setItem(lsKey('checklist'), JSON.stringify(checklist)); setAutoSaveStatus('unsaved'); } catch {}
-  }, [checklist]);
-
-  useEffect(() => {
-    try { localStorage.setItem(lsKey('sector'), selectedSector); } catch {}
-  }, [selectedSector]);
-
-  useEffect(() => {
-    try { localStorage.setItem(lsKey('checklistStatus'), checklistStatus); } catch {}
-  }, [checklistStatus]);
-
-  useEffect(() => {
-    try { localStorage.setItem(lsKey('checklistClosedAt'), checklistClosedAt ? checklistClosedAt.toISOString() : ''); } catch {}
-  }, [checklistClosedAt]);
-
-  useEffect(() => {
-    try { localStorage.setItem(lsKey('reopenHistory'), JSON.stringify(reopenHistory)); } catch {}
-  }, [reopenHistory]);
-
-  useEffect(() => {
-    try { localStorage.setItem(lsKey('report'), JSON.stringify(report)); setAutoSaveStatus('unsaved'); } catch {}
-  }, [report]);
-
-  // Salvar rascunho manualmente — confirma que está persistido e atualiza o indicador
-  const [rncs, setRncs] = useState([]);
-  const [savedAudits, setSavedAudits] = useState([]);
-
-  const [historySearch, setHistorySearch] = useState('');
-  const [historyPage, setHistoryPage] = useState(1);
-  const HISTORY_PAGE_SIZE = 8;
-
-  const [rncStatusFilter, setRncStatusFilter] = useState('Todas');
-  const [historyNcFilter, setHistoryNcFilter] = useState('Todas');
-
-  // ---- Salvamento manual + indicador de status ----
-  // autoSaveStatus: 'saved' | 'saving' | 'unsaved' | 'error'
+  // ── Indicador de status de rascunho ──────────────────────────────────────
   const [autoSaveStatus, setAutoSaveStatus] = useState('saved');
-  const [lastSavedAt, setLastSavedAt] = useState(null);
-  // ID da auditoria que está sendo editada (null = nova auditoria)
-  const [editingAuditId, setEditingAuditId] = useState(null);
-
-  // Marca rascunho como "não salvo" quando qualquer coisa muda
+  const [lastSavedAt, setLastSavedAt]       = useState(null);
   const markUnsaved = () => setAutoSaveStatus('unsaved');
 
-  // Salva rascunho manualmente no localStorage
+  // Salva rascunho manualmente (já está no useEffect, este só atualiza o indicador)
   const saveRascunho = () => {
     try {
-      localStorage.setItem(lsKey('checklist'), JSON.stringify(checklist));
-      localStorage.setItem(lsKey('report'), JSON.stringify(report));
-      localStorage.setItem(lsKey('checklistStatus'), checklistStatus);
-      localStorage.setItem(lsKey('sector'), selectedSector);
       setAutoSaveStatus('saved');
       setLastSavedAt(new Date());
-    } catch {
-      setAutoSaveStatus('error');
+    } catch { setAutoSaveStatus('error'); }
+  };
+
+  // Marca unsaved quando auditoria ativa muda
+  useEffect(() => {
+    if (auditoriaAtivaId) setAutoSaveStatus('unsaved');
+  }, [auditorias]);
+
+  // ── Criar nova auditoria ─────────────────────────────────────────────────
+  const criarNovaAuditoria = (setor) => {
+    const localId  = `aud_${Date.now()}`;
+    const raiNum   = `${pad3(raiCounter)}/${currentYear}`;
+    const nova = {
+      localId,
+      setor,
+      raiNumber: raiNum,
+      checklist: buildChecklist(setor, templateMap),
+      checklistStatus: 'Em Andamento',
+      checklistClosedAt: null,
+      reopenHistory: [],
+      report: {
+        raiNumber: raiNum,
+        date: today.toISOString().split('T')[0],
+        auditor: currentUser.nome || AUDITORES[0],
+        auditee: '', positivePoints: '', observations: '', improvements: '', conclusion: ''
+      }
+    };
+    setRaiCounter(prev => prev + 1);
+    setAuditorias(prev => [...prev, nova]);
+    setAuditoriaAtivaId(localId);
+    setActiveTab('checklist');
+  };
+
+  // ── Remover auditoria em andamento da lista local ────────────────────────
+  const removerRascunho = (localId) => {
+    setAuditorias(prev => prev.filter(a => a.localId !== localId));
+    if (auditoriaAtivaId === localId) {
+      setAuditoriaAtivaId(null);
+      setActiveTab('minhas_auditorias');
     }
   };
+
+  const [rncs, setRncs] = useState([]);
+  const [savedAudits, setSavedAudits] = useState([]);
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyPage, setHistoryPage]     = useState(1);
+  const HISTORY_PAGE_SIZE = 8;
+  const [rncStatusFilter, setRncStatusFilter]   = useState('Todas');
+  const [historyNcFilter, setHistoryNcFilter]   = useState('Todas');
+  const [editingAuditId, setEditingAuditId] = useState(null);
 
   const [calendarView, setCalendarView] = useState('month');
   const [calendarAnchor, setCalendarAnchor] = useState(new Date());
@@ -863,12 +884,11 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   const notify = (title, message) => requestConfirm({ title, message, confirmLabel: 'Entendi', danger: false, onConfirm: () => {} });
 
   // ---- Troca de setor: reconstrói o checklist e avisa se está usando o genérico ----
+  // Setor é imutável após criar auditoria.
+  // handleSectorChange agora cria nova auditoria para o setor escolhido.
   const handleSectorChange = (sector) => {
-    setSelectedSector(sector);
-    setChecklist(buildChecklist(sector, templateMap));
-    setChecklistStatus('Em Andamento');
-    setChecklistClosedAt(null);
-    setReopenHistory([]);
+    if (!sector) return;
+    criarNovaAuditoria(sector);
   };
 
   // Itens do checklist não podem ser editados enquanto estiver Fechado.
@@ -1042,33 +1062,18 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
       ));
     } else {
       setSavedAudits((prev) => [auditData, ...prev]);
-      setRaiCounter((prev) => prev + 1);
     }
 
     setEditingAuditId(null);
     setAutoSaveStatus('saved');
     setLastSavedAt(new Date());
-    setActiveTab('gestao');
 
-    // Reseta para nova auditoria (só aqui, após confirmação do banco)
-    const nextRaiNumber = `${pad3(raiCounter + (isEditing ? 0 : 1))}/${currentYear}`;
-    const freshChecklist = buildChecklist(sectorSnapshot, templateMap);
-    setChecklist(freshChecklist);
-    setChecklistStatus('Em Andamento');
-    setChecklistClosedAt(null);
-    setReopenHistory([]);
-    setReport({
-      raiNumber: nextRaiNumber,
-      date:      today.toISOString().split('T')[0],
-      auditor:   reportSnapshot.auditor,
-      auditee: '', positivePoints: '', observations: '', improvements: '', conclusion: ''
-    });
-
-    // Limpa localStorage só após tudo confirmado
-    try {
-      ['checklist','checklistStatus','checklistClosedAt','reopenHistory','report']
-        .forEach((k) => localStorage.removeItem(lsKey(k)));
-    } catch {}
+    // Remove auditoria da lista de rascunhos em andamento (foi concluída)
+    if (!isEditing && auditoriaAtivaId) {
+      setAuditorias(prev => prev.filter(a => a.localId !== auditoriaAtivaId));
+    }
+    setAuditoriaAtivaId(null);
+    setActiveTab('minhas_auditorias');
 
     notify('✓ Auditoria salva', `RAI Nº ${raiSnapshot} registrada com sucesso no banco de dados.`);
   };
@@ -1159,27 +1164,34 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
   const createRnc = async (sourceItem = null) => {
     const newId = pad3(rncCounter);
 
-    // Constrói a descrição completa puxando dados do checklist e do relatório
+    // Dados da auditoria ativa
+    const raiNum   = auditoriaAtiva?.raiNumber || report.raiNumber || dynamicRaiNumber;
+    const auditor  = auditoriaAtiva?.report?.auditor || report.auditor || '';
+    const setor    = auditoriaAtiva?.setor || selectedSector;
+    const localAudId = auditoriaAtiva?.localId || null;
+
+    // Descrição puxada automaticamente do item NC
     let descricao = '';
     if (sourceItem) {
+      const itemNum = (checklist.findIndex(i => i.id === sourceItem.id) + 1) || '';
       descricao = [
-        sourceItem.comments.trim(),
-        sourceItem.comments.trim() ? '' : `Item: ${sourceItem.question}`
-      ].filter(Boolean).join('\n') || sourceItem.question;
+        `Item ${itemNum}: ${sourceItem.question}`,
+        sourceItem.comments.trim() ? `Evidência: ${sourceItem.comments.trim()}` : ''
+      ].filter(Boolean).join('\n');
     }
 
     const newRnc = {
       id: newId,
       date: formattedDate,
-      process: selectedSector,
+      process: setor,
       origin: 'AUDITORIA INTERNA',
-      sourceRaiNumber: report.raiNumber,
+      sourceRaiNumber: raiNum,
+      sourceAuditoriaLocalId: localAudId,
       sourceChecklistItem: sourceItem ? { id: sourceItem.id, question: sourceItem.question } : null,
-      // Preenche campos a partir do contexto da auditoria
       description: descricao,
-      correction: '', correctionResp: report.auditor, correctionDate: '',
+      correction: '', correctionResp: auditor, correctionDate: '',
       rootCause: '', rootCauseResp: '', rootCauseDate: '',
-      actionPlan: '', responsible: report.auditor,
+      actionPlan: '', responsible: auditor,
       actionPlanDatePrev: '', actionPlanDateReal: '',
       evidence: '', effective: '', newRnc: '',
       closeDate: '', closeResp: '',
@@ -1191,16 +1203,19 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
 
     // Persiste no banco
     try {
-      const setorRow = sectors.find((s) => s.nome === selectedSector);
+      const setorRow = sectors.find((s) => s.nome === setor);
+      // Tenta encontrar o dbId da auditoria ativa para vincular a RNC
+      const auditoriaDbId = savedAudits.find(a => a.id === localAudId || a.dbId === localAudId)?.dbId || null;
       const payload = {
-        rac_numero: newId,
-        processo: selectedSector,
-        setor_id: setorRow?.id || null,
-        origem: 'AUDITORIA INTERNA',
-        descricao_nc: descricao || null,
-        correcao_resp: report.auditor || null,
-        plano_responsavel: report.auditor || null,
-        status: 'Aberta'
+        rac_numero:       newId,
+        processo:         setor,
+        setor_id:         setorRow?.id || null,
+        auditoria_id:     auditoriaDbId || null,
+        origem:           'AUDITORIA INTERNA',
+        descricao_nc:     descricao || null,
+        correcao_resp:    auditor || null,
+        plano_responsavel: auditor || null,
+        status:           'Aberta'
       };
       const [created] = await supaFetch('sga_rncs', { method: 'POST', body: JSON.stringify(payload) });
       if (created?.id) {
@@ -1314,9 +1329,13 @@ Gestão da Qualidade — Kalenborn do Brasil`
   const getProgressPct = () => (checklist.length === 0 ? 0 : Math.round((getAnsweredCount() / checklist.length) * 100));
 
   const getCompiledObservations = () => {
-    const obsItems = checklist.filter((item) => item.status === 'Obs' && item.comments.trim() !== '');
-    if (obsItems.length === 0) return report.observations;
-    return obsItems.map((item, index) => `${index + 1} – Ref. item ${index + 1}: ${item.comments}`).join('\n');
+    const obsItems = checklist
+      .map((item, idx) => ({ ...item, num: idx + 1 }))
+      .filter((item) => item.status === 'Obs' && item.comments.trim() !== '');
+    if (obsItems.length === 0) return report.observations || '';
+    return obsItems
+      .map((item, i) => `${i + 1} – Ref. item ${item.num}: ${item.comments.trim()}`)
+      .join('\n\n');
   };
 
   useEffect(() => {
@@ -1328,16 +1347,17 @@ Gestão da Qualidade — Kalenborn do Brasil`
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, checklist, dynamicRaiNumber]);
 
-  // Itens NC do checklist atual que ainda não têm uma RNC vinculada — usados
-  // para sugerir abertura rápida de RNC a partir do próprio checklist.
+  // Itens NC do checklist ativo que ainda não têm RNC vinculada
   const ncItemsWithoutRnc = useMemo(() => {
-    const linkedQuestionIds = new Set(
-      rncs.filter((r) => r.sourceChecklistItem).map((r) => `${r.sourceRaiNumber}::${r.sourceChecklistItem.id}`)
+    const raiNum = auditoriaAtiva?.raiNumber || report.raiNumber;
+    const linkedIds = new Set(
+      rncs.filter((r) => r.sourceChecklistItem)
+          .map((r) => `${r.sourceRaiNumber}::${r.sourceChecklistItem.id}`)
     );
     return checklist.filter(
-      (item) => item.status === 'NC' && !linkedQuestionIds.has(`${report.raiNumber}::${item.id}`)
+      (item) => item.status === 'NC' && !linkedIds.has(`${raiNum}::${item.id}`)
     );
-  }, [checklist, rncs, report.raiNumber]);
+  }, [checklist, rncs, auditoriaAtiva, report.raiNumber]);
 
   // Eventos do calendário a partir de hoje, ordenados por data/hora — usados
   // no card "Próximas Auditorias Programadas" do dashboard.
@@ -1895,6 +1915,138 @@ Gestão da Qualidade — Kalenborn do Brasil`
         )}
       </div>
 
+    </div>
+  );
+
+  // ── TELA: Minhas Auditorias em Andamento ────────────────────────────────
+  const SETORES_LISTA = sectors.length > 0
+    ? sectors.map(s => s.nome)
+    : Object.keys(templateMap).length > 0 ? Object.keys(templateMap) : ['COMERCIAL','COMPRAS','PCP','LOGÍSTICA','FISCAL','MANUTENÇÃO','PRODUÇÃO - CALDERARIA','PRODUÇÃO - REVESTIMENTO','PRODUÇÃO - VULCANIZAÇÃO','RECURSOS HUMANOS','INSPEÇÃO DE QUALIDADE','ORÇAMENTO E DESENVOLVIMENTO','PROJETO - DESENHO','ALTA DIREÇÃO','QUALIDADE - SEGURANÇA NO TRABALHO'];
+
+  const [novoSetor, setNovoSetor] = useState('');
+  const [showNovaAuditoria, setShowNovaAuditoria] = useState(false);
+
+  const renderMinhasAuditorias = () => (
+    <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50 min-h-full">
+      <div className="max-w-4xl mx-auto space-y-6">
+
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-black text-slate-900">Minhas Auditorias</h2>
+            <p className="text-slate-500 text-sm mt-1">Cada auditoria é independente — o setor fica travado após criar.</p>
+          </div>
+          <button
+            onClick={() => setShowNovaAuditoria(true)}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition text-sm shadow-lg shadow-indigo-600/25"
+          >
+            <Plus size={16} /> Nova Auditoria
+          </button>
+        </div>
+
+        {/* Modal nova auditoria */}
+        {showNovaAuditoria && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
+              <h3 className="text-lg font-black text-slate-900">Nova Auditoria</h3>
+              <p className="text-sm text-slate-500">Selecione o setor. <strong>Não será possível trocar depois.</strong></p>
+              <select
+                value={novoSetor}
+                onChange={e => setNovoSetor(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              >
+                <option value="">-- Selecione o setor --</option>
+                {SETORES_LISTA.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setShowNovaAuditoria(false); setNovoSetor(''); }}
+                  className="flex-1 border border-slate-200 text-slate-600 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    if (!novoSetor) return;
+                    criarNovaAuditoria(novoSetor);
+                    setShowNovaAuditoria(false);
+                    setNovoSetor('');
+                  }}
+                  disabled={!novoSetor}
+                  className={`flex-1 py-2.5 rounded-xl font-bold transition text-sm ${novoSetor ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+                >
+                  Criar Auditoria
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Lista de auditorias em andamento */}
+        {auditorias.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+            <ClipboardCheck size={40} className="mx-auto text-slate-300 mb-3" />
+            <p className="text-slate-500 font-medium">Nenhuma auditoria em andamento.</p>
+            <p className="text-slate-400 text-sm mt-1">Clique em "Nova Auditoria" para começar.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {auditorias.map(aud => {
+              const respondidos = aud.checklist.filter(i => i.status !== '').length;
+              const total       = aud.checklist.length;
+              const ncs         = aud.checklist.filter(i => i.status === 'NC').length;
+              const pct         = total > 0 ? Math.round((respondidos / total) * 100) : 0;
+              const isAtiva     = aud.localId === auditoriaAtivaId;
+
+              return (
+                <div key={aud.localId} className={`bg-white rounded-2xl border-2 p-5 transition ${isAtiva ? 'border-indigo-400 shadow-lg shadow-indigo-100' : 'border-slate-200 hover:border-slate-300'}`}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{aud.raiNumber}</span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${aud.checklistStatus === 'Fechado' ? 'bg-slate-800 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+                          {aud.checklistStatus}
+                        </span>
+                        {ncs > 0 && <span className="text-xs font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">{ncs} NC{ncs > 1 ? 's' : ''}</span>}
+                      </div>
+                      <h3 className="font-black text-slate-900">{aud.setor}</h3>
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                          <span>Progresso do checklist</span>
+                          <span>{respondidos}/{total} ({pct}%)</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-1.5">
+                          <div className="bg-indigo-500 h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setAuditoriaAtivaId(aud.localId); setActiveTab('checklist'); }}
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition"
+                      >
+                        {isAtiva ? 'Continuar' : 'Abrir'}
+                      </button>
+                      <button
+                        onClick={() => requestConfirm({
+                          title: 'Descartar rascunho',
+                          message: `Deseja descartar a auditoria em andamento do setor ${aud.setor}? Esta ação não pode ser desfeita.`,
+                          confirmLabel: 'Sim, descartar',
+                          danger: true,
+                          onConfirm: () => removerRascunho(aud.localId)
+                        })}
+                        className="border border-rose-200 text-rose-500 p-2 rounded-xl hover:bg-rose-50 transition"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -3314,9 +3466,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
   // Todas as abas disponíveis — filtradas por permissão abaixo
   const allNavItems = [
-    { id: 'dashboard', label: 'Dashboard Executivo', icon: LayoutDashboard, section: null, adminOnly: true },
-    { id: 'checklist', label: 'Lista de Verificação', icon: ClipboardCheck, section: 'Documentos Oficiais', adminOnly: true },
-    { id: 'report', label: 'Relatório RAI Final', icon: FileText, section: null, adminOnly: true },
+    { id: 'dashboard',         label: 'Dashboard Executivo',    icon: LayoutDashboard, section: null,                   adminOnly: true },
+    { id: 'minhas_auditorias', label: 'Minhas Auditorias',      icon: ClipboardCheck,  section: 'Auditorias',           adminOnly: true },
+    { id: 'checklist',         label: 'Lista de Verificação',   icon: ClipboardCheck,  section: null,                   adminOnly: true },
+    { id: 'report',            label: 'Relatório RAI Final',    icon: FileText,        section: null,                   adminOnly: true },
     { id: 'rnc', label: 'Tratativa RNC (RAC)', icon: AlertTriangle, section: null, adminOnly: true, badge: rncs.filter((r) => r.status === 'Aberta').length },
     { id: 'gestao', label: 'Histórico de Auditorias', icon: FolderTree, section: 'Base de Conhecimento', adminOnly: true },
     { id: 'documentos', label: 'Documentos por Setor', icon: Folder, section: isAdmin ? null : null, adminOnly: false, badge: docsVencidos + docsProximos || 0, badgeColor: docsVencidos > 0 ? 'rose' : 'amber' },
@@ -3478,9 +3631,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
         <main className="flex-1 overflow-auto bg-[#F4F5F9] p-8 print:p-0 print:bg-white">
           <div className="max-w-7xl mx-auto print-area">
-            {activeTab === 'dashboard' && renderDashboard()}
-            {activeTab === 'checklist' && renderChecklist()}
-            {activeTab === 'report' && renderReport()}
+            {activeTab === 'dashboard'         && renderDashboard()}
+            {activeTab === 'minhas_auditorias' && renderMinhasAuditorias()}
+            {activeTab === 'checklist'         && (auditoriaAtiva ? renderChecklist() : renderMinhasAuditorias())}
+            {activeTab === 'report'            && (auditoriaAtiva ? renderReport()    : renderMinhasAuditorias())}
             {activeTab === 'rnc' && renderRNC()}
             {activeTab === 'gestao' && renderGestao()}
             {activeTab === 'documentos' && renderDocumentos()}
