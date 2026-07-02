@@ -627,7 +627,10 @@ function App({ currentUser, extraAdmins, setExtraAdmins, onLogout }) {
 
   // Auditoria atualmente aberta no editor (null = nenhuma)
   const [auditoriaAtivaId, setAuditoriaAtivaId] = useState(null);
-  const auditoriaAtiva = auditorias.find(a => a.localId === auditoriaAtivaId) || null;
+  const auditoriaAtiva = useMemo(
+    () => auditorias.find(a => a.localId === auditoriaAtivaId) || null,
+    [auditorias, auditoriaAtivaId]
+  );
 
   // Persiste todas as auditorias em andamento sempre que mudar
   useEffect(() => {
