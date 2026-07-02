@@ -1913,7 +1913,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <p className="text-slate-500 text-sm mt-1">
             {getAnsweredCount()} de {checklist.length} itens avaliados · {selectedSector}
             {isChecklistLocked && checklistClosedAt && (
-              <> · Fechado em {checklistClosedAt.toLocaleDateString('pt-BR')} às {checklistClosedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</>
+              <> · Fechado em {new Date(checklistClosedAt).toLocaleDateString('pt-BR')} às {new Date(checklistClosedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</>
             )}
           </p>
         </div>
@@ -1965,7 +1965,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <ul className="space-y-1 ml-1">
             {reopenHistory.map((r, i) => (
               <li key={i} className="text-xs">
-                Reaberto em {r.date.toLocaleDateString('pt-BR')} às {r.date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} por <span className="font-bold">{r.auditor}</span>
+                Reaberto em {new Date(r.date).toLocaleDateString('pt-BR')} às {new Date(r.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} por <span className="font-bold">{r.auditor}</span>
               </li>
             ))}
           </ul>
