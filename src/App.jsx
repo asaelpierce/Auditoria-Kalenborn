@@ -316,6 +316,16 @@ const nextEventId = () => ++_eventSeq;
 // ---------------------------------------------------------------------------
 
 const pad3 = (n) => String(n).padStart(3, '0');
+
+// Formata uma data "pura" (YYYY-MM-DD, sem horário) vinda do banco. `new
+// Date('2026-07-02')` sozinho interpreta como UTC meia-noite; ao formatar
+// pro fuso do Brasil (UTC-3), isso "volta" um dia (mostra 01/07 em vez de
+// 02/07). Adicionar T00:00:00 força o JS a interpretar como horário local,
+// evitando esse desvio de um dia.
+const formatDateOnly = (dateStr, opts = { day: '2-digit', month: '2-digit', year: '2-digit' }) => {
+  if (!dateStr) return '';
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR', opts);
+};
 const pad2 = (n) => String(n).padStart(2, '0');
 
 // ---- Utilitários de data para o calendário (sem libs externas) ----
@@ -449,6 +459,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
   // Estatísticas agregadas de TODAS as auditorias já concluídas (histórico completo)
   const [historicalStats, setHistoricalStats] = useState({ c: 0, nc: 0, obs: 0, naoAvaliado: 0, total: 0 });
   const [statsPorSetor, setStatsPorSetor] = useState({});
+  const [statusDetalhe, setStatusDetalhe] = useState(null); // 'c' | 'nc' | 'obs' | null — abre o modal de detalhamento por setor
 
   useEffect(() => {
     const loadFromSupabase = async () => {
@@ -501,7 +512,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
             id: a.id,
             dbId: a.id,
             raiNumber: a.rai_numero,
-            date: a.data_emissao ? new Date(a.data_emissao).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' }) : '—',
+            date: a.data_emissao ? formatDateOnly(a.data_emissao) : '—',
             dateRaw: a.data_emissao || null, // formato ISO (YYYY-MM-DD) — usado para agrupar por mês
             sector: a.sga_setores?.nome || '—',
             branch: a.unidade || BRANCHES[0],
@@ -512,7 +523,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
             // sem precisar salvar o objeto inteiro no cliente (checklist ainda é buscado sob demanda)
             _dbReport: {
               raiNumber: a.rai_numero,
-              date: a.data_emissao ? new Date(a.data_emissao).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' }) : '',
+              date: a.data_emissao || '', // formato ISO — o campo é um <input type="date">, precisa desse formato
               auditor: a.sga_auditores?.nome || '',
               auditee: a.auditado_nome || '',
               positivePoints: a.pontos_positivos || '',
@@ -542,7 +553,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
           const mappedRncs = rncsData.map((r) => ({
             id: r.rac_numero || String(r.id),
             dbId: r.id,
-            date: r.data_emissao ? new Date(r.data_emissao).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' }) : '—',
+            date: r.data_emissao ? formatDateOnly(r.data_emissao) : '—',
             process: r.processo || '',
             origin: r.origem || 'AUDITORIA INTERNA',
             // Reconstituídos a partir dos vínculos do banco (auditoria_id / checklist_item_id)
@@ -1929,7 +1940,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
     const aoa = [
       [cell('Kalenborn — Wear Protection Solutions', xlsxStyle(true, 'D9D9D9', 'center')), cell(''), cell('RELATÓRIO DE AUDITORIA INTERNA', xlsxStyle(true, 'D9D9D9', 'center')), cell(''), cell('RAI Nº', xlsxHeader()), cell(report.raiNumber, xlsxStyle(true, 'FFE0E0', 'center'))],
-      [lbl('Auditoria Inicial'), val(formattedDate), lbl('Data de Emissão'), val(report.date), lbl('Unidade'), val(selectedBranch)],
+      [lbl('Auditoria Inicial'), val(formattedDate), lbl('Data de Emissão'), val(formatDateOnly(report.date)), lbl('Unidade'), val(selectedBranch)],
       [lbl('Área'), cell(selectedSector, xlsxStyle(true, null, 'left')), cell(''), cell(''), cell(''), cell('')],
       [lbl('Processo'), val(selectedSector), cell(''), cell(''), cell(''), cell('')],
       [lbl('Metodologia'), cell('Entrevista, Amostragem e Análise de Documentos do SGQ', xlsxStyle(false, null, 'left')), cell(''), cell(''), cell(''), cell('')],
@@ -2191,37 +2202,39 @@ Gestão da Qualidade — Kalenborn do Brasil`
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { label: 'Conforme',     count: historicalStats.c,   classes: {
-                  card: 'rounded-xl border border-emerald-100 bg-emerald-50/50 p-5',
+              { key: 'c', label: 'Conforme',     count: historicalStats.c,   classes: {
+                  card: 'rounded-xl border border-emerald-100 bg-emerald-50/50 p-5 text-left w-full hover:border-emerald-300 hover:shadow-sm transition cursor-pointer',
                   count: 'text-3xl font-black font-mono text-emerald-600',
                   pct: 'text-lg font-black font-mono text-emerald-500',
                   bar: 'h-full bg-emerald-500 rounded-full transition-all'
               } },
-              { label: 'Não Conforme', count: historicalStats.nc,  classes: {
-                  card: 'rounded-xl border border-rose-100 bg-rose-50/50 p-5',
+              { key: 'nc', label: 'Não Conforme', count: historicalStats.nc,  classes: {
+                  card: 'rounded-xl border border-rose-100 bg-rose-50/50 p-5 text-left w-full hover:border-rose-300 hover:shadow-sm transition cursor-pointer',
                   count: 'text-3xl font-black font-mono text-rose-600',
                   pct: 'text-lg font-black font-mono text-rose-500',
                   bar: 'h-full bg-rose-500 rounded-full transition-all'
               } },
-              { label: 'Observação',   count: historicalStats.obs, classes: {
-                  card: 'rounded-xl border border-amber-100 bg-amber-50/50 p-5',
+              { key: 'obs', label: 'Observação',   count: historicalStats.obs, classes: {
+                  card: 'rounded-xl border border-amber-100 bg-amber-50/50 p-5 text-left w-full hover:border-amber-300 hover:shadow-sm transition cursor-pointer',
                   count: 'text-3xl font-black font-mono text-amber-600',
                   pct: 'text-lg font-black font-mono text-amber-500',
                   bar: 'h-full bg-amber-500 rounded-full transition-all'
               } },
-            ].map(({ label, count, classes }) => {
+            ].map(({ key, label, count, classes }) => {
               const pct = historicalStats.total ? Math.round((count / historicalStats.total) * 1000) / 10 : 0;
               return (
-                <div key={label} className={classes.card}>
+                <button key={label} onClick={() => setStatusDetalhe(key)} className={classes.card}>
                   <div className="flex items-baseline justify-between mb-2">
                     <span className={classes.count}>{count}</span>
                     <span className={classes.pct}>{pct}%</span>
                   </div>
-                  <div className="text-[11px] uppercase font-bold tracking-wider text-slate-500 mb-2">{label}</div>
+                  <div className="text-[11px] uppercase font-bold tracking-wider text-slate-500 mb-2">
+                    {label} <span className="text-slate-300 font-normal normal-case">— ver por setor</span>
+                  </div>
                   <div className="w-full bg-white rounded-full h-1.5 border border-slate-100 overflow-hidden">
                     <div className={classes.bar} style={{ width: `${pct}%` }} />
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -4512,6 +4525,59 @@ Gestão da Qualidade — Kalenborn do Brasil`
           </div>
         </div>
       )}
+
+      {/* MODAL: detalhamento por setor de um indicador específico (Conforme/NC/Obs) —
+          aberto ao clicar num dos cards do "Histórico Geral de Conformidade" */}
+      {statusDetalhe && (() => {
+        const config = {
+          c:   { label: 'Conforme',      color: 'emerald' },
+          nc:  { label: 'Não Conforme',  color: 'rose' },
+          obs: { label: 'Observação',    color: 'amber' },
+        }[statusDetalhe];
+        const linhas = Object.entries(statsPorSetor)
+          .map(([setor, s]) => ({ setor, count: s[statusDetalhe] || 0, total: s.total }))
+          .filter((l) => l.count > 0)
+          .sort((a, b) => b.count - a.count);
+        const maxCount = Math.max(1, ...linhas.map((l) => l.count));
+        const corClasses = {
+          emerald: { text: 'text-emerald-600', bar: 'bg-emerald-500' },
+          rose:    { text: 'text-rose-600',    bar: 'bg-rose-500' },
+          amber:   { text: 'text-amber-600',   bar: 'bg-amber-500' },
+        }[config.color];
+        return (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 print:hidden" onClick={() => setStatusDetalhe(null)}>
+            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between mb-5">
+                <div>
+                  <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider mb-1">Por setor</p>
+                  <h3 className="text-xl font-black text-slate-900">{config.label}</h3>
+                </div>
+                <button onClick={() => setStatusDetalhe(null)} aria-label="Fechar" className="text-slate-400 hover:text-slate-600 shrink-0">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {linhas.length === 0 ? (
+                <p className="text-slate-400 text-sm text-center py-8">Nenhum item "{config.label}" registrado ainda.</p>
+              ) : (
+                <div className="space-y-3">
+                  {linhas.map(({ setor, count, total }) => (
+                    <div key={setor}>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="font-bold text-slate-700">{setor}</span>
+                        <span className={`font-black font-mono ${corClasses.text}`}>{count} <span className="text-slate-400 font-normal text-xs">de {total}</span></span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                        <div className={`h-full rounded-full ${corClasses.bar}`} style={{ width: `${(count / maxCount) * 100}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Estilos globais em src/index.css */}
     </div>
