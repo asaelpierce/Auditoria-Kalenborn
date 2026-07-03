@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { flushSync } from 'react-dom'
 import {
   ClipboardCheck, FileText, AlertTriangle, Save, Plus, CheckCircle, XCircle,
   FolderTree, LayoutDashboard, Building2, Bell, Search, User, Printer, ChevronDown,
@@ -79,6 +80,31 @@ const supaFetch = async (path, opts = {}) => {
   });
   if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
   return res.json();
+};
+
+// Busca TODAS as linhas de uma consulta, paginando automaticamente (o Supabase
+// limita a ~1000 linhas por requisição por padrão). Usado para agregados que
+// precisam olhar o histórico inteiro (ex.: contagem de C/NC/Obs de todas as
+// auditorias já feitas, não só a página mais recente).
+const supaFetchAll = async (path, batchSize = 1000) => {
+  let all = [];
+  let offset = 0;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const sep = path.includes('?') ? '&' : '?';
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}${sep}limit=${batchSize}&offset=${offset}`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      }
+    });
+    if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+    const batch = await res.json();
+    all = all.concat(batch);
+    if (batch.length < batchSize) break;
+    offset += batchSize;
+  }
+  return all;
 };
 
 const supaStorageUpload = async (file) => {
@@ -415,6 +441,8 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
   const [templateMap, setTemplateMap] = useState({});
   const [dbLoading, setDbLoading] = useState(true);
   const [dbError, setDbError] = useState(null);
+  // Estatísticas agregadas de TODAS as auditorias já concluídas (histórico completo)
+  const [historicalStats, setHistoricalStats] = useState({ c: 0, nc: 0, obs: 0, naoAvaliado: 0, total: 0 });
 
   useEffect(() => {
     const loadFromSupabase = async () => {
@@ -478,9 +506,11 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
             }
           }));
           setSavedAudits(mapped);
-          // Ajusta o contador RAI ao maior número encontrado
+          // Ajusta o contador RAI ao maior número encontrado — update funcional
+          // porque o cálculo dos rascunhos (outra seção) roda em paralelo e não
+          // pode ser sobrescrito por este aqui (nem o contrário).
           const nums = mapped.map((a) => parseInt(a.raiNumber?.split('/')[0] || '0', 10)).filter(Boolean);
-          if (nums.length) setRaiCounter(Math.max(...nums) + 1);
+          if (nums.length) setRaiCounter(prev => Math.max(prev, Math.max(...nums) + 1));
         }
       } catch (err) {
         console.error('Erro ao carregar histórico de auditorias:', err);
@@ -490,7 +520,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
       // 4. RNCs
       try {
         const rncsData = await supaFetch(
-          'sga_rncs?select=*&order=created_at.desc&limit=200'
+          'sga_rncs?select=*,sga_auditorias(rai_numero),sga_checklist_itens(id,ordem,pergunta)&order=created_at.desc&limit=200'
         );
         if (rncsData.length > 0) {
           const mappedRncs = rncsData.map((r) => ({
@@ -499,8 +529,13 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
             date: r.data_emissao ? new Date(r.data_emissao).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' }) : '—',
             process: r.processo || '',
             origin: r.origem || 'AUDITORIA INTERNA',
-            sourceRaiNumber: null,
-            sourceChecklistItem: null,
+            // Reconstituídos a partir dos vínculos do banco (auditoria_id / checklist_item_id)
+            // — sem isso, depois de recarregar a página o app "esquecia" que um item de
+            // checklist já tinha RNC aberta e deixava criar duplicada.
+            sourceRaiNumber: r.sga_auditorias?.rai_numero || null,
+            sourceChecklistItem: r.sga_checklist_itens
+              ? { id: r.sga_checklist_itens.id, question: r.sga_checklist_itens.pergunta }
+              : null,
             description: r.descricao_nc || '',
             correction: r.correcao || '',
             correctionResp: r.correcao_resp || '',
@@ -583,6 +618,22 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
         setDbError('Falha ao carregar documentos.');
       }
 
+      // 7. Estatísticas históricas agregadas — C/NC/Obs de TODAS as auditorias já
+      // concluídas (sga_checklist_itens só tem itens de auditorias finalizadas,
+      // rascunhos não entram aqui). Pagina automaticamente para pegar tudo,
+      // não só as primeiras 1000 linhas.
+      try {
+        const itensAvaliacao = await supaFetchAll('sga_checklist_itens?select=avaliacao');
+        const c   = itensAvaliacao.filter((i) => i.avaliacao === 'C').length;
+        const nc  = itensAvaliacao.filter((i) => i.avaliacao === 'NC').length;
+        const obs = itensAvaliacao.filter((i) => i.avaliacao === 'Obs').length;
+        const naoAvaliado = itensAvaliacao.filter((i) => !i.avaliacao).length;
+        setHistoricalStats({ c, nc, obs, naoAvaliado, total: itensAvaliacao.length });
+      } catch (err) {
+        console.error('Erro ao carregar estatísticas históricas:', err);
+        setDbError('Falha ao carregar estatísticas do histórico.');
+      }
+
       setDbLoading(false);
     };
     loadFromSupabase();
@@ -606,17 +657,26 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
   const formattedDate = today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
   // ── ARQUITETURA: auditorias independentes por setor ───────────────────────
-  // Cada auditoria tem setor fixo. Estados React separados, sincronizados via useEffect.
-  // Rascunhos ficam 100% no Supabase — nada em localStorage. Cada salvamento (auto
-  // ou manual) INSERE uma versão nova (tabela sga_rascunhos); nunca sobrescreve uma
-  // existente. O app sempre lê a versão mais recente através da view sga_rascunhos_atual.
+  // Cada auditoria tem setor fixo. Rascunhos ficam 100% no Supabase — nada em
+  // localStorage. Cada salvamento (auto ou manual) INSERE uma versão nova
+  // (tabela sga_rascunhos); nunca sobrescreve uma existente. O app sempre lê a
+  // versão mais recente através da view sga_rascunhos_atual.
+  //
+  // IMPORTANTE sobre o desenho do estado: o autosave e o salvamento manual leem
+  // os valores DIRETO dos states do editor (checklist, report, etc.) — nunca de
+  // volta através do array `auditorias`. Ler de volta do array causava bug de
+  // closure desatualizada (o save sempre gravava a versão anterior à edição
+  // mais recente, porque os dois useEffects de mesma dependência rodavam com o
+  // mesmo array "auditorias" ainda não atualizado). A identidade no banco
+  // (dbId/versão) de quem está sendo editado agora vive numa ref, não no array.
 
-  // 1. Lista de rascunhos — carregada do banco ao montar (sempre a versão mais recente)
+  // 1. Lista de rascunhos — só para exibição em "Minhas Auditorias". Carregada
+  // do banco ao montar; atualizada quando cria/remove/finaliza um rascunho.
   const [auditorias, setAuditorias] = useState([]);
   const [rascunhosLoaded, setRascunhosLoaded] = useState(false);
 
-  useEffect(() => {
-    supaFetch(`sga_rascunhos_atual?usuario_email=eq.${encodeURIComponent(currentUser.email)}&select=*`)
+  const recarregarRascunhos = () => {
+    return supaFetch(`sga_rascunhos_atual?usuario_email=eq.${encodeURIComponent(currentUser.email)}&select=*`)
       .then((rows) => {
         setAuditorias(rows.map((r) => ({
           localId: r.local_id,
@@ -631,12 +691,33 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
           report: r.report || {}
         })));
       })
-      .catch((err) => console.error('Erro ao carregar rascunhos do banco:', err))
-      .finally(() => setRascunhosLoaded(true));
+      .catch((err) => console.error('Erro ao carregar rascunhos do banco:', err));
+  };
+
+  useEffect(() => {
+    recarregarRascunhos().finally(() => setRascunhosLoaded(true));
+
+    // Considera também os rascunhos de OUTROS auditores (não só os do usuário
+    // atual) ao calcular o próximo número de RAI — evita que dois auditores
+    // diferentes, cada um com um rascunho aberto, acabem reservando o mesmo
+    // número de RAI sem saber um do outro.
+    supaFetch('sga_rascunhos_atual?select=rai_numero')
+      .then((rows) => {
+        const nums = rows.map((r) => parseInt(r.rai_numero?.split('/')[0] || '0', 10)).filter(Boolean);
+        if (nums.length) setRaiCounter(prev => Math.max(prev, Math.max(...nums) + 1));
+      })
+      .catch((err) => console.error('Erro ao calcular próximo número de RAI a partir dos rascunhos:', err));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 2. ID da auditoria aberta (null = nenhuma)
+  // 2. ID da auditoria aberta (null = nenhuma). Só é usado pra rascunhos em
+  // andamento — ao abrir uma auditoria já FINALIZADA (VER / editar histórico),
+  // isso é sempre limpo para null, pra nunca misturar os dois fluxos.
   const [auditoriaAtivaId, setAuditoriaAtivaId] = useState(null);
+
+  // Identidade da linha no banco do rascunho ativo — vive numa ref (não em
+  // state) porque é lida de forma síncrona dentro dos callbacks de save, sem
+  // precisar esperar um re-render.
+  const auditoriaAtivaMetaRef = useRef({ dbId: null, versao: 1 });
 
   // 3. Estados independentes do editor — iniciam vazios, sincronizam com a ativa
   const [checklist,         setChecklist        ] = useState([]);
@@ -662,6 +743,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
       setReopenHistory(ativa.reopenHistory || []);
       setReport(ativa.report || {});
       setDynamicRaiNumber(ativa.raiNumber || `${pad3(raiCounter)}/${currentYear}`);
+      auditoriaAtivaMetaRef.current = { dbId: ativa.dbId || null, versao: ativa.versao || 1 };
     } else {
       setChecklist([]);
       setSelectedSector('COMERCIAL');
@@ -672,7 +754,9 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
     }
   }, [auditoriaAtivaId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 5. Quando os estados do editor mudam, persiste de volta na lista em memória
+  // 5. Quando os estados do editor mudam, atualiza a cópia exibida em "Minhas
+  // Auditorias" (progresso, etc.). Isso é só para a LISTAGEM — o autosave (item
+  // 6 abaixo) NÃO depende deste efeito, lê os states direto.
   useEffect(() => {
     if (!auditoriaAtivaId) return;
     setAuditorias(prev => prev.map(a =>
@@ -687,27 +771,30 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
     ));
   }, [checklist, checklistStatus, checklistClosedAt, reopenHistory, report]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Insere uma nova versão do rascunho no banco (nunca sobrescreve a anterior)
-  const inserirVersaoRascunho = async (ativa) => {
-    const proximaVersao = (ativa.versao || 1) + 1;
+  // Insere uma nova versão do rascunho ativo no banco (nunca sobrescreve a
+  // anterior). Monta o payload DIRETO dos states do editor — nunca do array
+  // `auditorias` — para nunca gravar uma versão desatualizada.
+  const inserirVersaoRascunhoAtivo = async () => {
+    const proximaVersao = (auditoriaAtivaMetaRef.current.versao || 1) + 1;
     const [savedRow] = await supaFetch('sga_rascunhos', {
       method: 'POST',
       body: JSON.stringify({
-        local_id: ativa.localId,
+        local_id: auditoriaAtivaId,
         usuario_email: currentUser.email,
-        setor: ativa.setor,
-        rai_numero: ativa.raiNumber,
+        setor: selectedSector,
+        rai_numero: dynamicRaiNumber,
         versao: proximaVersao,
-        checklist: ativa.checklist,
-        checklist_status: ativa.checklistStatus,
-        checklist_closed_at: ativa.checklistClosedAt,
-        reopen_history: ativa.reopenHistory,
-        report: ativa.report
+        checklist,
+        checklist_status: checklistStatus,
+        checklist_closed_at: checklistClosedAt ? checklistClosedAt.toISOString() : null,
+        reopen_history: reopenHistory,
+        report
       })
     });
     if (savedRow?.id) {
+      auditoriaAtivaMetaRef.current = { dbId: savedRow.id, versao: proximaVersao };
       setAuditorias(prev => prev.map(a =>
-        a.localId === ativa.localId ? { ...a, dbId: savedRow.id, versao: proximaVersao } : a
+        a.localId === auditoriaAtivaId ? { ...a, dbId: savedRow.id, versao: proximaVersao } : a
       ));
     }
   };
@@ -718,15 +805,13 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
   const rascunhoSaveTimer = useRef(null);
   useEffect(() => {
     if (!auditoriaAtivaId || !rascunhosLoaded) return;
-    const ativa = auditorias.find(a => a.localId === auditoriaAtivaId);
-    if (!ativa) return;
 
     setAutoSaveStatus('unsaved');
     clearTimeout(rascunhoSaveTimer.current);
     rascunhoSaveTimer.current = setTimeout(async () => {
       setAutoSaveStatus('saving');
       try {
-        await inserirVersaoRascunho(ativa);
+        await inserirVersaoRascunhoAtivo();
         setAutoSaveStatus('saved');
         setLastSavedAt(new Date());
       } catch (err) {
@@ -747,11 +832,9 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
   const saveRascunho = async () => {
     if (!auditoriaAtivaId) return;
     clearTimeout(rascunhoSaveTimer.current);
-    const ativa = auditorias.find(a => a.localId === auditoriaAtivaId);
-    if (!ativa) return;
     setAutoSaveStatus('saving');
     try {
-      await inserirVersaoRascunho(ativa);
+      await inserirVersaoRascunhoAtivo();
       setAutoSaveStatus('saved');
       setLastSavedAt(new Date());
     } catch (err) {
@@ -783,6 +866,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
     };
     setRaiCounter(prev => prev + 1);
     setAuditorias(prev => [...prev, nova]);
+    auditoriaAtivaMetaRef.current = { dbId: null, versao: 1 };
     setAuditoriaAtivaId(localId);
     setActiveTab('checklist');
 
@@ -803,6 +887,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
         })
       });
       if (savedRow?.id) {
+        auditoriaAtivaMetaRef.current = { dbId: savedRow.id, versao: 1 };
         setAuditorias(prev => prev.map(a => a.localId === localId ? { ...a, dbId: savedRow.id } : a));
       }
     } catch (err) {
@@ -1143,10 +1228,34 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
           avaliacao:    item.status || '',
           comentarios:  item.comments
         }));
-        await supaFetch('sga_checklist_itens', {
+        const insertedItens = await supaFetch('sga_checklist_itens', {
           method: 'POST',
           body: JSON.stringify(itensPayload)
         });
+
+        // Vincula RNCs criadas durante esta auditoria ao ID real do item de
+        // checklist no banco (checklist_item_id) — só existe a partir de agora,
+        // porque os itens só ganham ID definitivo quando a auditoria fecha.
+        // Sem isso, a rastreabilidade RNC → item do checklist se perdia após
+        // recarregar a página (o vínculo só existia na memória da sessão).
+        if (insertedItens?.length === itensPayload.length) {
+          const idMap = {}; // id local do item (na tela) -> id real no banco
+          checklistSnapshot.forEach((item, idx) => {
+            idMap[item.id] = insertedItens[idx]?.id;
+          });
+          const rncsParaVincular = rncs.filter((r) =>
+            r.sourceChecklistItem &&
+            (r.sourceAuditoriaLocalId === auditoriaAtivaId || (isEditing && r.sourceAuditoriaLocalId === editingAuditId)) &&
+            idMap[r.sourceChecklistItem.id] &&
+            r.dbId
+          );
+          await Promise.all(rncsParaVincular.map((r) =>
+            supaFetch(`sga_rncs?id=eq.${r.dbId}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ checklist_item_id: idMap[r.sourceChecklistItem.id] })
+            }).catch((e) => console.error(`Erro ao vincular RNC ${r.id} ao item do checklist:`, e))
+          ));
+        }
       }
 
     } catch (err) {
@@ -1206,6 +1315,13 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
 
   // Carrega uma auditoria do histórico no modo de VISUALIZAÇÃO (somente leitura)
   const loadAudit = async (audit, modoEditar = false) => {
+    // Desvincula de qualquer rascunho que estivesse ativo ANTES de carregar os
+    // dados da auditoria finalizada. Usa flushSync para garantir que o efeito
+    // que reage a essa mudança (e zeraria checklist/report) termine de rodar
+    // antes de continuarmos — senão ele poderia sobrescrever os dados que
+    // estamos prestes a carregar (corrida de estado entre dois useEffects).
+    flushSync(() => setAuditoriaAtivaId(null));
+
     setSelectedSector(audit.sector);
     setSelectedBranch(audit.branch);
 
@@ -1219,10 +1335,13 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
       setLoadingAuditId(audit.id);
       try {
         const itensData = await supaFetch(
-          `sga_checklist_itens?auditoria_id=eq.${audit.dbId || audit.id}&select=ordem,pergunta,avaliacao,comentarios&order=ordem`
+          `sga_checklist_itens?auditoria_id=eq.${audit.dbId || audit.id}&select=id,ordem,pergunta,avaliacao,comentarios&order=ordem`
         );
-        const checklistFromDb = itensData.map((it, idx) => ({
-          id: idx + 1,
+        // Usa o ID real do banco (não uma posição sequencial) — é o mesmo ID
+        // usado em sga_rncs.checklist_item_id, então preserva o vínculo com
+        // RNCs já existentes ao reabrir a auditoria para edição.
+        const checklistFromDb = itensData.map((it) => ({
+          id: it.id,
           question: it.pergunta,
           status: it.avaliacao || '',
           comments: it.comentarios || ''
@@ -1358,8 +1477,14 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
     // Persiste no banco
     try {
       const setorRow = sectors.find((s) => s.nome === setor);
-      // Tenta encontrar o dbId da auditoria ativa para vincular a RNC
-      const auditoriaDbId = savedAudits.find(a => a.id === localAudId || a.dbId === localAudId)?.dbId || null;
+      // Tenta encontrar o dbId da auditoria de origem: pode ser um rascunho
+      // recém-salvo (localAudId) OU uma auditoria histórica sendo reaberta
+      // para edição (editingAuditId) — sem esse segundo caso, RNCs criadas
+      // durante uma edição ficavam sem vínculo nenhum no banco.
+      const auditoriaDbId =
+        savedAudits.find(a => a.id === localAudId || a.dbId === localAudId)?.dbId
+        || (typeof editingAuditId === 'number' ? editingAuditId : null)
+        || null;
       const payload = {
         rac_numero:       newId,
         processo:         setor,
@@ -1493,13 +1618,18 @@ Gestão da Qualidade — Kalenborn do Brasil`
   };
 
   useEffect(() => {
-    if (activeTab === 'report') {
+    // Só recalcula automaticamente enquanto o checklist está editável (rascunho
+    // ativo ou em modo de edição). Em modo de VISUALIZAÇÃO (checklistStatus ===
+    // 'Fechado' e não está em edição), isso sobrescrevia o RAI e as observações
+    // salvos pelos valores do rascunho atualmente em aberto — mostrando dados
+    // errados na tela de "VER".
+    if (activeTab === 'report' && checklistStatus !== 'Fechado') {
       const compiledObs = getCompiledObservations();
       const newObsText = checklist.some((i) => i.status === 'Obs' && i.comments) ? compiledObs : report.observations;
       setReport((prev) => ({ ...prev, observations: newObsText, raiNumber: dynamicRaiNumber }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, checklist, dynamicRaiNumber]);
+  }, [activeTab, checklist, dynamicRaiNumber, checklistStatus]);
 
   // Itens NC do checklist ativo que ainda não têm RNC vinculada
   const ncItemsWithoutRnc = useMemo(() => {
@@ -1954,6 +2084,61 @@ Gestão da Qualidade — Kalenborn do Brasil`
         </button>
       </div>
 
+
+      {/* Histórico geral — agrega TODAS as auditorias já concluídas (não só a atual) */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div className="flex justify-between items-center mb-5">
+          <div>
+            <h3 className="text-base font-bold text-slate-800">Histórico Geral de Conformidade</h3>
+            <p className="text-slate-500 text-xs mt-0.5">Somatório de todos os itens de checklist de todas as auditorias já concluídas</p>
+          </div>
+          <button onClick={() => setActiveTab('gestao')} className="text-xs text-indigo-600 font-bold hover:underline shrink-0">Ver Histórico Completo</button>
+        </div>
+        {historicalStats.total === 0 ? (
+          <div className="p-6 text-center text-slate-400 text-sm font-medium">Nenhum item de checklist concluído ainda.</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { label: 'Conforme',     count: historicalStats.c,   classes: {
+                  card: 'rounded-xl border border-emerald-100 bg-emerald-50/50 p-5',
+                  count: 'text-3xl font-black font-mono text-emerald-600',
+                  pct: 'text-lg font-black font-mono text-emerald-500',
+                  bar: 'h-full bg-emerald-500 rounded-full transition-all'
+              } },
+              { label: 'Não Conforme', count: historicalStats.nc,  classes: {
+                  card: 'rounded-xl border border-rose-100 bg-rose-50/50 p-5',
+                  count: 'text-3xl font-black font-mono text-rose-600',
+                  pct: 'text-lg font-black font-mono text-rose-500',
+                  bar: 'h-full bg-rose-500 rounded-full transition-all'
+              } },
+              { label: 'Observação',   count: historicalStats.obs, classes: {
+                  card: 'rounded-xl border border-amber-100 bg-amber-50/50 p-5',
+                  count: 'text-3xl font-black font-mono text-amber-600',
+                  pct: 'text-lg font-black font-mono text-amber-500',
+                  bar: 'h-full bg-amber-500 rounded-full transition-all'
+              } },
+            ].map(({ label, count, classes }) => {
+              const pct = historicalStats.total ? Math.round((count / historicalStats.total) * 1000) / 10 : 0;
+              return (
+                <div key={label} className={classes.card}>
+                  <div className="flex items-baseline justify-between mb-2">
+                    <span className={classes.count}>{count}</span>
+                    <span className={classes.pct}>{pct}%</span>
+                  </div>
+                  <div className="text-[11px] uppercase font-bold tracking-wider text-slate-500 mb-2">{label}</div>
+                  <div className="w-full bg-white rounded-full h-1.5 border border-slate-100 overflow-hidden">
+                    <div className={classes.bar} style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <div className="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 font-medium">
+          {historicalStats.total} itens avaliados no total
+          {historicalStats.naoAvaliado > 0 && ` · ${historicalStats.naoAvaliado} sem avaliação registrada`}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Status do checklist em andamento */}
@@ -2469,17 +2654,19 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <button onClick={printDocument} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition text-sm shadow-sm">
             <Printer size={16} /> Imprimir / PDF
           </button>
-          <button
-            onClick={saveRascunho}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition text-sm border ${
-              autoSaveStatus === 'saved'
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
-                : 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
-            }`}
-          >
-            <Save size={16} />
-            {autoSaveStatus === 'saved' ? 'Rascunho salvo ✓' : 'Salvar Rascunho'}
-          </button>
+          {auditoriaAtivaId && (
+            <button
+              onClick={saveRascunho}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition text-sm border ${
+                autoSaveStatus === 'saved'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                  : 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
+              }`}
+            >
+              <Save size={16} />
+              {autoSaveStatus === 'saved' ? 'Rascunho salvo ✓' : 'Salvar Rascunho'}
+            </button>
+          )}
           <button
             onClick={() => {
               if (saveBlockers.length > 0) {
@@ -3788,8 +3975,12 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <div className="max-w-7xl mx-auto print-area">
             {activeTab === 'dashboard'         && renderDashboard()}
             {activeTab === 'minhas_auditorias' && renderMinhasAuditorias()}
-            {activeTab === 'checklist'         && (auditoriaAtiva ? renderChecklist() : renderMinhasAuditorias())}
-            {activeTab === 'report'            && (auditoriaAtiva ? renderReport()    : renderMinhasAuditorias())}
+            {/* Antes dependia de "auditoriaAtiva" (só existe para RASCUNHOS em
+                andamento) — então VER numa auditoria já finalizada carregava os
+                dados certinho mas a tela continuava presa em "Minhas Auditorias".
+                A condição certa é: existe checklist carregado pra mostrar? */}
+            {activeTab === 'checklist'         && (checklist.length > 0 ? renderChecklist() : renderMinhasAuditorias())}
+            {activeTab === 'report'            && (checklist.length > 0 ? renderReport()    : renderMinhasAuditorias())}
             {activeTab === 'rnc' && renderRNC()}
             {activeTab === 'gestao' && renderGestao()}
             {activeTab === 'documentos' && renderDocumentos()}
