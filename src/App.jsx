@@ -1657,9 +1657,12 @@ Gestão da Qualidade — Kalenborn do Brasil`
   const getProgressPct = () => (checklist.length === 0 ? 0 : Math.round((getAnsweredCount() / checklist.length) * 100));
 
   const getCompiledObservations = () => {
-    const obsItems = checklist
+    // Cita tanto os itens "Obs" quanto os "NC" — os dois são achados relevantes
+    // da auditoria e merecem aparecer no relatório. A diferença é só que o NC,
+    // além de aparecer aqui, também gera uma RNC separada pra tratativa formal.
+    const achados = checklist
       .map((item, idx) => ({ ...item, num: idx + 1 }))
-      .filter((item) => item.status === 'Obs' && item.comments.trim() !== '');
+      .filter((item) => (item.status === 'Obs' || item.status === 'NC') && item.comments.trim() !== '');
 
     // Quantidade de RNCs abertas para ESTA auditoria — casa pelo número de RAI
     // (mais preciso que só o setor, já que um setor pode ter várias auditorias
@@ -1669,29 +1672,31 @@ Gestão da Qualidade — Kalenborn do Brasil`
       ? `${rncsDestaAuditoria.length} RNC${rncsDestaAuditoria.length > 1 ? 's' : ''} aberta(s)/registrada(s) para este processo: ${rncsDestaAuditoria.map((r) => r.id).join(', ')}.`
       : '';
 
-    if (obsItems.length === 0 && !rncLine) return report.observations || '';
+    if (achados.length === 0 && !rncLine) return report.observations || '';
 
-    const obsText = obsItems
-      .map((item, i) => `${i + 1} – Ref. item ${item.num}: ${item.comments.trim()}`)
+    const obsText = achados
+      .map((item, i) => `${i + 1} – [${item.status}] Ref. item ${item.num}: ${item.comments.trim()}`)
       .join('\n\n');
 
     return [obsText, rncLine].filter(Boolean).join('\n\n');
   };
 
   useEffect(() => {
-    // As observações podem ser recalculadas sempre que o checklist estiver
-    // editável (rascunho ativo OU edição de auditoria histórica). Já o número
-    // da RAI só pode ser recalculado quando é de fato um RASCUNHO NOVO
-    // (auditoriaAtivaId setado) — durante a EDIÇÃO de uma auditoria já
-    // finalizada, auditoriaAtivaId é sempre null, e o RAI tem que permanecer
-    // o número original daquela auditoria. Sem essa distinção, reabrir uma
-    // auditoria antiga para editar sobrescrevia o RAI dela pelo próximo
-    // número "livre" do contador, gerando RAI duplicada ao salvar.
-    if (activeTab === 'report' && checklistStatus !== 'Fechado') {
+    // A condição certa pra saber se pode recalcular não é "checklistStatus !==
+    // Fechado" — porque fechar o checklist é um PASSO NORMAL do fluxo antes de
+    // ir escrever o relatório (o usuário fecha o checklist e SÓ DEPOIS navega
+    // pra aba Relatório; se a gente bloquear em 'Fechado', a observação nunca
+    // entra nesse fluxo comum). A condição certa é: existe uma SESSÃO ATIVA
+    // (rascunho sendo criado OU auditoria reaberta para edição)? Só quando NÃO
+    // há sessão ativa nenhuma (visualização pura de auditoria histórica, sem
+    // ter clicado em "Editar") é que não deve recalcular — aí sim precisamos
+    // preservar o que já está salvo, sem sobrescrever.
+    const sessaoAtiva = !!(auditoriaAtivaId || editingAuditId);
+    if (activeTab === 'report' && sessaoAtiva) {
       const compiledObs = getCompiledObservations();
-      const temObsOuRnc = checklist.some((i) => i.status === 'Obs' && i.comments)
+      const temAchadoOuRnc = checklist.some((i) => (i.status === 'Obs' || i.status === 'NC') && i.comments)
         || rncs.some((r) => r.sourceRaiNumber === report.raiNumber);
-      const newObsText = temObsOuRnc ? compiledObs : report.observations;
+      const newObsText = temAchadoOuRnc ? compiledObs : report.observations;
       setReport((prev) => ({
         ...prev,
         observations: newObsText,
@@ -1699,7 +1704,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
       }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, checklist, dynamicRaiNumber, checklistStatus, auditoriaAtivaId, rncs]);
+  }, [activeTab, checklist, dynamicRaiNumber, checklistStatus, auditoriaAtivaId, editingAuditId, rncs]);
 
   // Itens NC do checklist ativo que ainda não têm RNC vinculada
   const ncItemsWithoutRnc = useMemo(() => {
