@@ -448,6 +448,8 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
   const [dbError, setDbError] = useState(null);
   // Estatísticas agregadas de TODAS as auditorias já concluídas (histórico completo)
   const [historicalStats, setHistoricalStats] = useState({ c: 0, nc: 0, obs: 0, naoAvaliado: 0, total: 0 });
+  const [statsPorSetor, setStatsPorSetor] = useState({});
+  const [setorDetalhe, setSetorDetalhe] = useState(null); // setor aberto no modal de detalhamento
 
   useEffect(() => {
     const loadFromSupabase = async () => {
@@ -636,14 +638,30 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
       // 7. Estatísticas históricas agregadas — C/NC/Obs de TODAS as auditorias já
       // concluídas (sga_checklist_itens só tem itens de auditorias finalizadas,
       // rascunhos não entram aqui). Pagina automaticamente para pegar tudo,
-      // não só as primeiras 1000 linhas.
+      // não só as primeiras 1000 linhas. Também traz o setor de cada item pra
+      // dar pra detalhar por setor (clicar e ver o breakdown específico).
       try {
-        const itensAvaliacao = await supaFetchAll('sga_checklist_itens?select=avaliacao');
+        const itensAvaliacao = await supaFetchAll(
+          'sga_checklist_itens?select=avaliacao,sga_auditorias(sga_setores(nome))'
+        );
         const c   = itensAvaliacao.filter((i) => i.avaliacao === 'C').length;
         const nc  = itensAvaliacao.filter((i) => i.avaliacao === 'NC').length;
         const obs = itensAvaliacao.filter((i) => i.avaliacao === 'Obs').length;
         const naoAvaliado = itensAvaliacao.filter((i) => !i.avaliacao).length;
         setHistoricalStats({ c, nc, obs, naoAvaliado, total: itensAvaliacao.length });
+
+        // Agrupa por setor: { 'COMPRAS': { c, nc, obs, total }, ... }
+        const porSetor = {};
+        itensAvaliacao.forEach((i) => {
+          const setor = i.sga_auditorias?.sga_setores?.nome;
+          if (!setor) return;
+          if (!porSetor[setor]) porSetor[setor] = { c: 0, nc: 0, obs: 0, total: 0 };
+          porSetor[setor].total += 1;
+          if (i.avaliacao === 'C') porSetor[setor].c += 1;
+          else if (i.avaliacao === 'NC') porSetor[setor].nc += 1;
+          else if (i.avaliacao === 'Obs') porSetor[setor].obs += 1;
+        });
+        setStatsPorSetor(porSetor);
       } catch (err) {
         console.error('Erro ao carregar estatísticas históricas:', err);
         setDbError('Falha ao carregar estatísticas do histórico.');
@@ -2280,7 +2298,15 @@ Gestão da Qualidade — Kalenborn do Brasil`
                     >
                       <td className="p-4 font-bold text-slate-800 font-mono whitespace-nowrap">{audit.raiNumber}</td>
                       <td className="p-4 text-slate-500 whitespace-nowrap">{audit.date}</td>
-                      <td className="p-4 font-semibold text-slate-700">{audit.sector}</td>
+                      <td className="p-4 font-semibold">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSetorDetalhe(audit.sector); }}
+                          className="text-slate-700 hover:text-indigo-600 hover:underline transition"
+                          title={`Ver detalhamento de ${audit.sector}`}
+                        >
+                          {audit.sector}
+                        </button>
+                      </td>
                       <td className="p-4 text-slate-500">{audit.auditor}</td>
                       <td className="p-4 text-center">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-black ${audit.ncCount > 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
@@ -2495,7 +2521,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                           {audit.ncCount} NC{audit.ncCount !== 1 ? 's' : ''}
                         </span>
                       </div>
-                      <h3 className="font-black text-slate-900">{audit.sector}</h3>
+                      <button onClick={() => setSetorDetalhe(audit.sector)} className="font-black text-slate-900 hover:text-indigo-600 hover:underline transition text-left">{audit.sector}</button>
                       <p className="text-xs text-slate-500 mt-1">{audit.date} · Auditor: {audit.auditor} · {audit.branch}</p>
                     </div>
                     <button
@@ -3345,7 +3371,15 @@ Gestão da Qualidade — Kalenborn do Brasil`
                   <td className="p-4 text-center font-black text-slate-800 font-mono">{audit.raiNumber}</td>
                   <td className="p-4 text-center text-slate-500">{audit.date}</td>
                   <td className="p-4 font-bold text-indigo-700">{audit.branch}</td>
-                  <td className="p-4 font-bold text-slate-700 uppercase">{audit.sector}</td>
+                  <td className="p-4 font-bold uppercase">
+                    <button
+                      onClick={() => setSetorDetalhe(audit.sector)}
+                      className="text-slate-700 hover:text-indigo-600 hover:underline transition"
+                      title={`Ver detalhamento de ${audit.sector}`}
+                    >
+                      {audit.sector}
+                    </button>
+                  </td>
                   <td className="p-4 text-slate-500">{audit.auditor}</td>
                   <td className="p-4 text-center">
                     <span className={`px-3 py-1 rounded-full text-xs font-black shadow-sm border ${audit.ncCount > 0 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
@@ -4451,6 +4485,62 @@ Gestão da Qualidade — Kalenborn do Brasil`
                 {confirmAction.confirmLabel || 'Confirmar'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE DETALHAMENTO POR SETOR — clicar num setor mostra o breakdown
+          de Conforme/NC/Obs somando TODAS as auditorias já feitas naquele setor */}
+      {setorDetalhe && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 print:hidden" onClick={() => setSetorDetalhe(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-5">
+              <div>
+                <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider mb-1">Detalhamento por setor</p>
+                <h3 className="text-xl font-black text-slate-900">{setorDetalhe}</h3>
+              </div>
+              <button onClick={() => setSetorDetalhe(null)} aria-label="Fechar" className="text-slate-400 hover:text-slate-600 shrink-0">
+                <X size={18} />
+              </button>
+            </div>
+
+            {(() => {
+              const s = statsPorSetor[setorDetalhe] || { c: 0, nc: 0, obs: 0, total: 0 };
+              if (s.total === 0) {
+                return <p className="text-slate-400 text-sm text-center py-8">Nenhum item de checklist avaliado ainda para este setor.</p>;
+              }
+              const itens = [
+                { label: 'Conforme',     count: s.c,   classes: { card: 'border-emerald-100 bg-emerald-50/50', num: 'text-emerald-600', bar: 'bg-emerald-500' } },
+                { label: 'Não Conforme', count: s.nc,  classes: { card: 'border-rose-100 bg-rose-50/50',       num: 'text-rose-600',    bar: 'bg-rose-500'    } },
+                { label: 'Observação',   count: s.obs, classes: { card: 'border-amber-100 bg-amber-50/50',     num: 'text-amber-600',   bar: 'bg-amber-500'   } },
+              ];
+              return (
+                <>
+                  <div className="grid grid-cols-3 gap-3 mb-5">
+                    {itens.map(({ label, count, classes }) => {
+                      const pct = Math.round((count / s.total) * 1000) / 10;
+                      return (
+                        <div key={label} className={`rounded-xl border p-4 ${classes.card}`}>
+                          <div className={`text-2xl font-black font-mono ${classes.num}`}>{count}</div>
+                          <div className="text-[10px] uppercase font-bold tracking-wider text-slate-500 mt-1">{label}</div>
+                          <div className="text-xs font-bold text-slate-400 mt-0.5">{pct}%</div>
+                          <div className="w-full bg-white rounded-full h-1.5 border border-slate-100 overflow-hidden mt-2">
+                            <div className={`h-full rounded-full ${classes.bar}`} style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium text-center mb-4">{s.total} itens avaliados no total, somando todas as auditorias já feitas em {setorDetalhe}</p>
+                  <button
+                    onClick={() => { setActiveTab('gestao'); setSetorDetalhe(null); }}
+                    className="w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-indigo-700 transition"
+                  >
+                    Ver auditorias deste setor no histórico
+                  </button>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
