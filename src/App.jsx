@@ -2068,10 +2068,6 @@ Gestão da Qualidade — Kalenborn do Brasil`
   // ---- Métricas globais derivadas do estado real ----
   const totalAuditsYear = savedAudits.length;
   const totalOpenRncs = rncs.filter((r) => r.status === 'Aberta').length;
-  const auditsWithZeroNc = savedAudits.filter((a) => a.ncCount === 0).length;
-  const conformityIndex = savedAudits.length > 0
-    ? Math.round((auditsWithZeroNc / savedAudits.length) * 100)
-    : 100;
 
   const effectivenessIndex = (() => {
     const closed = rncs.filter((r) => r.effective === 'Sim').length;
@@ -2124,7 +2120,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
       </div>
 
       {/* KPI Cards — clicáveis: levam direto para a tela e filtro relacionados */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <button
           onClick={() => setActiveTab('gestao')}
           className="text-left bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer"
@@ -2152,21 +2148,6 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <div className="relative text-4xl font-black text-slate-900 font-mono tabular-nums">{totalOpenRncs}</div>
           <div className="relative text-xs font-medium mt-2 text-rose-600 flex items-center gap-1">
             {totalOpenRncs > 0 ? 'Requer atenção imediata' : 'Nenhuma pendência'} <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition" />
-          </div>
-        </button>
-
-        <button
-          onClick={() => { setHistoryNcFilter('SemNC'); setActiveTab('gestao'); }}
-          className="text-left bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-md hover:border-emerald-200 transition-all cursor-pointer"
-        >
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-50 rounded-full group-hover:scale-110 transition-transform"></div>
-          <div className="relative flex justify-between items-start mb-5">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Índice de Conformidade</h3>
-            <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-md shadow-emerald-600/30"><ShieldCheck size={18} /></div>
-          </div>
-          <div className="relative text-4xl font-black text-slate-900 font-mono tabular-nums">{conformityIndex}%</div>
-          <div className="relative text-xs text-slate-500 font-medium mt-2 flex items-center gap-1">
-            Meta: 90.0% · Auditorias sem NC <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition" />
           </div>
         </button>
 
