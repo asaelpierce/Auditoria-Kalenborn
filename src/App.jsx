@@ -934,6 +934,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
   const [historyPage, setHistoryPage]     = useState(1);
   const HISTORY_PAGE_SIZE = 8;
   const [rncStatusFilter, setRncStatusFilter] = useState('Todas');
+  const [rncScopeFilter, setRncScopeFilter] = useState('setor');
   const [historyNcFilter, setHistoryNcFilter] = useState('Todas');
   const [editingAuditId, setEditingAuditId]   = useState(null);
 
@@ -1625,10 +1626,22 @@ Gestão da Qualidade — Kalenborn do Brasil`
     const obsItems = checklist
       .map((item, idx) => ({ ...item, num: idx + 1 }))
       .filter((item) => item.status === 'Obs' && item.comments.trim() !== '');
-    if (obsItems.length === 0) return report.observations || '';
-    return obsItems
+
+    // Quantidade de RNCs abertas para ESTA auditoria — casa pelo número de RAI
+    // (mais preciso que só o setor, já que um setor pode ter várias auditorias
+    // ao longo do tempo, cada uma com seu próprio RAI).
+    const rncsDestaAuditoria = rncs.filter((r) => r.sourceRaiNumber === report.raiNumber || r.process === selectedSector);
+    const rncLine = rncsDestaAuditoria.length > 0
+      ? `${rncsDestaAuditoria.length} RNC${rncsDestaAuditoria.length > 1 ? 's' : ''} aberta(s)/registrada(s) para este processo: ${rncsDestaAuditoria.map((r) => r.id).join(', ')}.`
+      : '';
+
+    if (obsItems.length === 0 && !rncLine) return report.observations || '';
+
+    const obsText = obsItems
       .map((item, i) => `${i + 1} – Ref. item ${item.num}: ${item.comments.trim()}`)
       .join('\n\n');
+
+    return [obsText, rncLine].filter(Boolean).join('\n\n');
   };
 
   useEffect(() => {
@@ -1642,7 +1655,9 @@ Gestão da Qualidade — Kalenborn do Brasil`
     // número "livre" do contador, gerando RAI duplicada ao salvar.
     if (activeTab === 'report' && checklistStatus !== 'Fechado') {
       const compiledObs = getCompiledObservations();
-      const newObsText = checklist.some((i) => i.status === 'Obs' && i.comments) ? compiledObs : report.observations;
+      const temObsOuRnc = checklist.some((i) => i.status === 'Obs' && i.comments)
+        || rncs.some((r) => r.sourceRaiNumber === report.raiNumber || r.process === selectedSector);
+      const newObsText = temObsOuRnc ? compiledObs : report.observations;
       setReport((prev) => ({
         ...prev,
         observations: newObsText,
@@ -1650,7 +1665,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
       }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, checklist, dynamicRaiNumber, checklistStatus, auditoriaAtivaId]);
+  }, [activeTab, checklist, dynamicRaiNumber, checklistStatus, auditoriaAtivaId, rncs]);
 
   // Itens NC do checklist ativo que ainda não têm RNC vinculada
   const ncItemsWithoutRnc = useMemo(() => {
@@ -1991,24 +2006,6 @@ Gestão da Qualidade — Kalenborn do Brasil`
     ? Math.round((auditsWithZeroNc / savedAudits.length) * 100)
     : 100;
 
-  // Auditorias concluídas por mês (últimos 6 meses) — dá pra ver de cara se as
-  // datas estão certas (ex.: tudo empilhado no mesmo mês é sinal de alerta) e
-  // se o ritmo de auditorias está caindo ou subindo.
-  const auditoriasPorMes = (() => {
-    const meses = [];
-    const hoje = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-      meses.push({ key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, label: d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''), count: 0 });
-    }
-    savedAudits.forEach((a) => {
-      if (!a.dateRaw) return;
-      const key = a.dateRaw.slice(0, 7); // YYYY-MM
-      const alvo = meses.find((m) => m.key === key);
-      if (alvo) alvo.count += 1;
-    });
-    return meses;
-  })();
   const effectivenessIndex = (() => {
     const closed = rncs.filter((r) => r.effective === 'Sim').length;
     const evaluated = rncs.filter((r) => r.effective === 'Sim' || r.effective === 'Não').length;
@@ -2122,31 +2119,6 @@ Gestão da Qualidade — Kalenborn do Brasil`
             {effectivenessIndex !== null ? 'Ações validadas e fechadas' : 'Ainda sem ações avaliadas'} <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition" />
           </div>
         </button>
-      </div>
-
-
-      {/* Ritmo de auditorias por mês — ajuda a notar datas erradas (tudo empilhado
-          num mês só) e a acompanhar se o ritmo de auditorias está em dia */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-        <div className="mb-5">
-          <h3 className="text-base font-bold text-slate-800">Auditorias Concluídas por Mês</h3>
-          <p className="text-slate-500 text-xs mt-0.5">Últimos 6 meses, pela data de emissão registrada em cada auditoria</p>
-        </div>
-        <div className="flex items-end justify-between gap-3 h-32">
-          {(() => {
-            const maxCount = Math.max(1, ...auditoriasPorMes.map((m) => m.count));
-            return auditoriasPorMes.map((m) => (
-              <div key={m.key} className="flex-1 flex flex-col items-center justify-end h-full">
-                <span className="text-xs font-black text-slate-700 mb-1">{m.count}</span>
-                <div
-                  className={`w-full rounded-t-lg transition-all ${m.count > 0 ? 'bg-indigo-500' : 'bg-slate-100'}`}
-                  style={{ height: `${Math.max(6, (m.count / maxCount) * 100)}%` }}
-                />
-                <span className="text-[11px] font-bold text-slate-400 uppercase mt-2">{m.label}</span>
-              </div>
-            ));
-          })()}
-        </div>
       </div>
 
       {/* Histórico geral — agrega TODAS as auditorias já concluídas (não só a atual) */}
@@ -2987,7 +2959,15 @@ Gestão da Qualidade — Kalenborn do Brasil`
   };
 
   const renderRNC = () => {
-    const visibleRncs = rncStatusFilter === 'Todas' ? rncs : rncs.filter((r) => r.status === rncStatusFilter);
+    // Se há uma auditoria aberta (rascunho ou reaberta para edição/visualização),
+    // por padrão mostra só as RNCs do MESMO SETOR dela — evita misturar RNC de
+    // Compras com RNC de outro setor quando você está trabalhando numa auditoria
+    // específica. O filtro "Todas" continua disponível pra visão geral.
+    const temAuditoriaAberta = checklist.length > 0;
+    const rncsDoEscopo = (rncScopeFilter === 'setor' && temAuditoriaAberta)
+      ? rncs.filter((r) => r.process === selectedSector)
+      : rncs;
+    const visibleRncs = rncStatusFilter === 'Todas' ? rncsDoEscopo : rncsDoEscopo.filter((r) => r.status === rncStatusFilter);
     return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center mb-4">
@@ -3011,6 +2991,31 @@ Gestão da Qualidade — Kalenborn do Brasil`
         </div>
       </div>
 
+      {temAuditoriaAberta && (
+        <div className="flex gap-2 print:hidden">
+          <button
+            onClick={() => setRncScopeFilter('setor')}
+            className={`px-4 py-1.5 rounded-full text-xs font-bold border transition ${
+              rncScopeFilter === 'setor'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            Desta auditoria ({selectedSector}) — {rncs.filter((r) => r.process === selectedSector).length}
+          </button>
+          <button
+            onClick={() => setRncScopeFilter('todas')}
+            className={`px-4 py-1.5 rounded-full text-xs font-bold border transition ${
+              rncScopeFilter === 'todas'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            Todos os setores ({rncs.length})
+          </button>
+        </div>
+      )}
+
       <div className="flex gap-2 print:hidden">
         {['Todas', 'Aberta', 'Fechada'].map((opt) => (
           <button
@@ -3022,7 +3027,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                 : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
             }`}
           >
-            {opt} {opt !== 'Todas' && `(${rncs.filter((r) => r.status === opt).length})`}
+            {opt} {opt !== 'Todas' && `(${rncsDoEscopo.filter((r) => r.status === opt).length})`}
           </button>
         ))}
       </div>
@@ -3035,7 +3040,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
       ) : visibleRncs.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center text-slate-500 shadow-sm font-medium flex flex-col items-center justify-center">
           <ShieldCheck size={48} className="text-slate-300 mb-4" />
-          Nenhuma RNC com status "{rncStatusFilter}".
+          Nenhuma RNC com status "{rncStatusFilter}"{rncScopeFilter === 'setor' && temAuditoriaAberta ? ` em ${selectedSector}` : ''}.
         </div>
       ) : visibleRncs.map((rnc) => (
         <div key={rnc.id} className="bg-white border-2 border-black font-sans text-sm relative mb-8 shadow-xl max-w-[1000px] mx-auto print:shadow-none print:border-0 print:w-full">
