@@ -1199,6 +1199,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
     // ── PASSO 1: Salva no Supabase ──────────────────────────────────────
     // Só avança se o banco confirmar. Se falhar, mostra erro e NÃO limpa nada.
     let dbId = isEditing ? editingAuditId : null;
+    let raiFinal = raiSnapshot;
     try {
       const setorRow = sectors.find((s) => s.nome === sectorSnapshot);
       const auditorRow = auditoresDb.find((a) => a.nome === reportSnapshot.auditor);
@@ -1219,16 +1220,46 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
       };
 
       if (isEditing && typeof editingAuditId === 'number') {
+        // Em edição, o RAI TEM que continuar sendo o original daquela auditoria.
+        // Se colidir aqui, é sinal de dado inconsistente — não tenta "corrigir"
+        // trocando o número sozinho, porque estaria mudando a identidade de
+        // uma auditoria que já existia.
         await supaFetch(`sga_auditorias?id=eq.${editingAuditId}`, {
           method: 'PATCH',
           body: JSON.stringify(auditoriaPayload)
         });
         await supaFetch(`sga_checklist_itens?auditoria_id=eq.${editingAuditId}`, { method: 'DELETE' });
       } else {
-        const [savedAuditDb] = await supaFetch('sga_auditorias', {
-          method: 'POST',
-          body: JSON.stringify(auditoriaPayload)
-        });
+        // Auditoria NOVA: se o número de RAI já estiver em uso (contador do
+        // navegador ficou desatualizado, ou duas pessoas criaram uma auditoria
+        // quase ao mesmo tempo), busca o próximo número realmente livre no
+        // banco e tenta de novo automaticamente — uma vez — em vez de travar.
+        let savedAuditDb;
+        try {
+          [savedAuditDb] = await supaFetch('sga_auditorias', {
+            method: 'POST',
+            body: JSON.stringify(auditoriaPayload)
+          });
+        } catch (postErr) {
+          const isDuplicateRai = String(postErr.message).includes('sga_auditorias_rai_numero_key');
+          if (!isDuplicateRai) throw postErr;
+
+          const [existentes, rascunhosExistentes] = await Promise.all([
+            supaFetch('sga_auditorias?select=rai_numero'),
+            supaFetch('sga_rascunhos_atual?select=rai_numero')
+          ]);
+          const todosNumeros = [...existentes, ...rascunhosExistentes]
+            .map((r) => parseInt(r.rai_numero?.split('/')[0] || '0', 10))
+            .filter(Boolean);
+          const proximoNumero = (todosNumeros.length ? Math.max(...todosNumeros) : 0) + 1;
+          raiFinal = `${pad3(proximoNumero)}/${currentYear}`;
+          setRaiCounter(proximoNumero + 1);
+
+          [savedAuditDb] = await supaFetch('sga_auditorias', {
+            method: 'POST',
+            body: JSON.stringify({ ...auditoriaPayload, rai_numero: raiFinal })
+          });
+        }
         if (savedAuditDb?.id) {
           dbId = savedAuditDb.id;
         } else {
@@ -1277,9 +1308,12 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
     } catch (err) {
       // Banco falhou — NÃO limpa nada, NÃO reseta o checklist
       console.error('Erro ao persistir auditoria no Supabase:', err);
+      const isDuplicateRai = String(err.message).includes('sga_auditorias_rai_numero_key');
       notify(
         '⚠️ Erro ao salvar no banco',
-        `Os dados NÃO foram salvos no banco. Não feche o navegador. Erro: ${err.message}. Tente novamente ou contate o suporte.`
+        isDuplicateRai
+          ? `O número de RAI ${raiSnapshot} já está em uso por outra auditoria. Como esta é uma edição, o número não pode ser trocado automaticamente. Verifique no Histórico se já existe outra auditoria com esse RAI antes de tentar de novo.`
+          : `Os dados NÃO foram salvos no banco. Não feche o navegador. Erro: ${err.message}. Tente novamente ou contate o suporte.`
       );
       return; // ← sai da função sem limpar nada
     }
@@ -1289,7 +1323,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
       id:               dbId || localId,
       dbId:             dbId,
       isLocal:          false,
-      raiNumber:        raiSnapshot,
+      raiNumber:        raiFinal,
       date:             formattedDate,
       sector:           sectorSnapshot,
       branch:           branchSnapshot,
@@ -1326,7 +1360,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
     setAuditoriaAtivaId(null);
     setActiveTab('minhas_auditorias');
 
-    notify('✓ Auditoria salva', `RAI Nº ${raiSnapshot} registrada com sucesso no banco de dados.`);
+    notify('✓ Auditoria salva', `RAI Nº ${raiFinal} registrada com sucesso no banco de dados.` + (raiFinal !== raiSnapshot ? ` (número ajustado automaticamente de ${raiSnapshot} porque já estava em uso)` : ''));
   };
 
   // Carrega uma auditoria do histórico no modo de VISUALIZAÇÃO (somente leitura)
