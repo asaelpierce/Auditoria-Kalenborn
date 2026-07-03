@@ -439,6 +439,10 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
     SECTORS_FALLBACK.map((nome) => ({ nome, requisitos: '' }))
   );
   const [templateMap, setTemplateMap] = useState({});
+  // Lista real de auditores cadastrados no banco (sga_auditores) — usada para
+  // vincular auditor_id ao salvar auditorias/eventos. Antes disso era uma
+  // lista fixa no código com só a Luciene, então ninguém mais ficava vinculado.
+  const [auditoresDb, setAuditoresDb] = useState([{ id: 1, nome: 'Luciene Batista' }]);
   const [dbLoading, setDbLoading] = useState(true);
   const [dbError, setDbError] = useState(null);
   // Estatísticas agregadas de TODAS as auditorias já concluídas (histórico completo)
@@ -456,6 +460,15 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
       } catch (err) {
         console.error('Erro ao carregar setores:', err);
         setDbError('Falha ao carregar setores.');
+      }
+
+      // 1b. Auditores cadastrados
+      try {
+        const auditoresData = await supaFetch('sga_auditores?select=id,nome&order=nome');
+        if (auditoresData.length > 0) setAuditoresDb(auditoresData);
+      } catch (err) {
+        console.error('Erro ao carregar auditores:', err);
+        setDbError('Falha ao carregar auditores.');
       }
 
       // 2. Templates de perguntas (todas de uma vez, ordenadas)
@@ -1185,7 +1198,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
     let dbId = isEditing ? editingAuditId : null;
     try {
       const setorRow = sectors.find((s) => s.nome === sectorSnapshot);
-      const auditorRow = [{ id: 1, nome: 'Luciene Batista' }].find((a) => a.nome === reportSnapshot.auditor);
+      const auditorRow = auditoresDb.find((a) => a.nome === reportSnapshot.auditor);
       const auditoriaPayload = {
         rai_numero:       raiSnapshot,
         setor_id:         setorRow?.id || null,
@@ -1476,7 +1489,6 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
 
     // Persiste no banco
     try {
-      const setorRow = sectors.find((s) => s.nome === setor);
       // Tenta encontrar o dbId da auditoria de origem: pode ser um rascunho
       // recém-salvo (localAudId) OU uma auditoria histórica sendo reaberta
       // para edição (editingAuditId) — sem esse segundo caso, RNCs criadas
@@ -1488,7 +1500,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
       const payload = {
         rac_numero:       newId,
         processo:         setor,
-        setor_id:         setorRow?.id || null,
+        unidade:          selectedBranch || null,
         auditoria_id:     auditoriaDbId || null,
         origem:           'AUDITORIA INTERNA',
         descricao_nc:     descricao || null,
@@ -1542,7 +1554,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
   const persistEvent = async (event, isNew) => {
     try {
       const setorRow = sectors.find((s) => s.nome === event.sector);
-      const auditorRow = [{ id: 1, nome: 'Luciene Batista' }].find((a) => a.nome === event.auditor);
+      const auditorRow = auditoresDb.find((a) => a.nome === event.auditor);
       const payload = {
         setor_id: setorRow?.id || null,
         auditor_id: auditorRow?.id || null,
@@ -2265,6 +2277,13 @@ Gestão da Qualidade — Kalenborn do Brasil`
   const [novoSetor, setNovoSetor] = useState('');
   const [showNovaAuditoria, setShowNovaAuditoria] = useState(false);
 
+  const renderCarregandoAuditoria = () => (
+    <div className="flex flex-col items-center justify-center py-24 text-slate-400 animate-fade-in">
+      <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+      <p className="text-sm font-bold">Carregando auditoria…</p>
+    </div>
+  );
+
   const renderMinhasAuditorias = () => (
     <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50 min-h-full">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -2321,70 +2340,109 @@ Gestão da Qualidade — Kalenborn do Brasil`
           </div>
         )}
 
-        {/* Lista de auditorias em andamento */}
-        {auditorias.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-            <ClipboardCheck size={40} className="mx-auto text-slate-300 mb-3" />
-            <p className="text-slate-500 font-medium">Nenhuma auditoria em andamento.</p>
-            <p className="text-slate-400 text-sm mt-1">Clique em "Nova Auditoria" para começar.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {auditorias.map(aud => {
-              const respondidos = aud.checklist.filter(i => i.status !== '').length;
-              const total       = aud.checklist.length;
-              const ncs         = aud.checklist.filter(i => i.status === 'NC').length;
-              const pct         = total > 0 ? Math.round((respondidos / total) * 100) : 0;
-              const isAtiva     = aud.localId === auditoriaAtivaId;
+        {/* Lista de auditorias em andamento (rascunhos) */}
+        <div>
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">Em andamento</h3>
+          {auditorias.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+              <ClipboardCheck size={40} className="mx-auto text-slate-300 mb-3" />
+              <p className="text-slate-500 font-medium">Nenhuma auditoria em andamento.</p>
+              <p className="text-slate-400 text-sm mt-1">Clique em "Nova Auditoria" para começar.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {auditorias.map(aud => {
+                const respondidos = aud.checklist.filter(i => i.status !== '').length;
+                const total       = aud.checklist.length;
+                const ncs         = aud.checklist.filter(i => i.status === 'NC').length;
+                const pct         = total > 0 ? Math.round((respondidos / total) * 100) : 0;
+                const isAtiva     = aud.localId === auditoriaAtivaId;
 
-              return (
-                <div key={aud.localId} className={`bg-white rounded-2xl border-2 p-5 transition ${isAtiva ? 'border-indigo-400 shadow-lg shadow-indigo-100' : 'border-slate-200 hover:border-slate-300'}`}>
+                return (
+                  <div key={aud.localId} className={`bg-white rounded-2xl border-2 p-5 transition ${isAtiva ? 'border-indigo-400 shadow-lg shadow-indigo-100' : 'border-slate-200 hover:border-slate-300'}`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Rascunho</span>
+                          <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{aud.raiNumber}</span>
+                          {ncs > 0 && <span className="text-xs font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">{ncs} NC{ncs > 1 ? 's' : ''}</span>}
+                        </div>
+                        <h3 className="font-black text-slate-900">{aud.setor}</h3>
+                        <div className="mt-2">
+                          <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                            <span>Progresso do checklist</span>
+                            <span>{respondidos}/{total} ({pct}%)</span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-1.5">
+                            <div className="bg-indigo-500 h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setAuditoriaAtivaId(aud.localId); setActiveTab('checklist'); }}
+                          className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition"
+                        >
+                          {isAtiva ? 'Continuar' : 'Abrir'}
+                        </button>
+                        <button
+                          onClick={() => requestConfirm({
+                            title: 'Descartar rascunho',
+                            message: `Deseja descartar a auditoria em andamento do setor ${aud.setor}? Esta ação não pode ser desfeita.`,
+                            confirmLabel: 'Sim, descartar',
+                            danger: true,
+                            onConfirm: () => removerRascunho(aud.localId)
+                          })}
+                          className="border border-rose-200 text-rose-500 p-2 rounded-xl hover:bg-rose-50 transition"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Lista de auditorias já concluídas */}
+        <div>
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3 mt-6">Concluídas</h3>
+          {savedAudits.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+              <FileText size={40} className="mx-auto text-slate-300 mb-3" />
+              <p className="text-slate-500 font-medium">Nenhuma auditoria concluída ainda.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {savedAudits.map(audit => (
+                <div key={audit.id} className="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 p-5 transition">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{aud.raiNumber}</span>
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${aud.checklistStatus === 'Fechado' ? 'bg-slate-800 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
-                          {aud.checklistStatus}
+                        <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-800 text-white">Concluída</span>
+                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{audit.raiNumber}</span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${audit.ncCount > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                          {audit.ncCount} NC{audit.ncCount !== 1 ? 's' : ''}
                         </span>
-                        {ncs > 0 && <span className="text-xs font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">{ncs} NC{ncs > 1 ? 's' : ''}</span>}
                       </div>
-                      <h3 className="font-black text-slate-900">{aud.setor}</h3>
-                      <div className="mt-2">
-                        <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                          <span>Progresso do checklist</span>
-                          <span>{respondidos}/{total} ({pct}%)</span>
-                        </div>
-                        <div className="w-full bg-slate-100 rounded-full h-1.5">
-                          <div className="bg-indigo-500 h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                        </div>
-                      </div>
+                      <h3 className="font-black text-slate-900">{audit.sector}</h3>
+                      <p className="text-xs text-slate-500 mt-1">{audit.date} · Auditor: {audit.auditor} · {audit.branch}</p>
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => { setAuditoriaAtivaId(aud.localId); setActiveTab('checklist'); }}
-                        className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition"
-                      >
-                        {isAtiva ? 'Continuar' : 'Abrir'}
-                      </button>
-                      <button
-                        onClick={() => requestConfirm({
-                          title: 'Descartar rascunho',
-                          message: `Deseja descartar a auditoria em andamento do setor ${aud.setor}? Esta ação não pode ser desfeita.`,
-                          confirmLabel: 'Sim, descartar',
-                          danger: true,
-                          onConfirm: () => removerRascunho(aud.localId)
-                        })}
-                        className="border border-rose-200 text-rose-500 p-2 rounded-xl hover:bg-rose-50 transition"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => loadAudit(audit)}
+                      disabled={loadingAuditId === audit.id}
+                      className="bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-600 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm disabled:opacity-50 disabled:cursor-wait shrink-0"
+                    >
+                      {loadingAuditId === audit.id ? '...' : 'VER'}
+                    </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -2791,7 +2849,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <div className="w-[20%] p-2 border-r-2 border-black font-bold bg-gray-100 flex items-center">Auditor Líder:</div>
           <div className="w-[80%] p-2">
             <select value={report.auditor} onChange={(e) => setReport({ ...report, auditor: e.target.value })} className="w-full focus:outline-none bg-transparent font-bold cursor-pointer">
-              {AUDITORES.map((a) => <option key={a} value={a}>{a}</option>)}
+              {auditoresDb.map((a) => <option key={a.id} value={a.nome}>{a.nome}</option>)}
             </select>
           </div>
         </div>
@@ -3979,8 +4037,16 @@ Gestão da Qualidade — Kalenborn do Brasil`
                 andamento) — então VER numa auditoria já finalizada carregava os
                 dados certinho mas a tela continuava presa em "Minhas Auditorias".
                 A condição certa é: existe checklist carregado pra mostrar? */}
-            {activeTab === 'checklist'         && (checklist.length > 0 ? renderChecklist() : renderMinhasAuditorias())}
-            {activeTab === 'report'            && (checklist.length > 0 ? renderReport()    : renderMinhasAuditorias())}
+            {/* Enquanto o VER ainda está buscando os dados no banco, mostra um
+                carregando em vez de cair no fallback "Minhas Auditorias" — sem
+                isso, clicar na aba rápido demais parecia que o checklist tinha
+                sumido, quando na verdade a busca só ainda não tinha terminado. */}
+            {activeTab === 'checklist' && (
+              loadingAuditId ? renderCarregandoAuditoria() : (checklist.length > 0 ? renderChecklist() : renderMinhasAuditorias())
+            )}
+            {activeTab === 'report' && (
+              loadingAuditId ? renderCarregandoAuditoria() : (checklist.length > 0 ? renderReport() : renderMinhasAuditorias())
+            )}
             {activeTab === 'rnc' && renderRNC()}
             {activeTab === 'gestao' && renderGestao()}
             {activeTab === 'documentos' && renderDocumentos()}
@@ -4104,7 +4170,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                   onChange={(e) => setEventDraft({ ...eventDraft, auditor: e.target.value })}
                   className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
-                  {AUDITORES.map((a) => <option key={a} value={a}>{a}</option>)}
+                  {auditoresDb.map((a) => <option key={a.id} value={a.nome}>{a.nome}</option>)}
                 </select>
               </div>
 
