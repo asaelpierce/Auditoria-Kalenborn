@@ -6,7 +6,7 @@ import {
   Gauge, TrendingUp, ShieldCheck, Clock, Trash2, X, FileSpreadsheet, AlertCircle,
   ListPlus, Link2, Calendar, ChevronLeft, ChevronRight, Mail, GripVertical,
   CalendarDays, CalendarRange, Copy, Check, Folder, Upload, ExternalLink,
-  FileWarning, FileBadge, Filter, Tag, Edit3
+  FileWarning, FileBadge, Filter, Tag, Edit3, Menu
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
@@ -431,6 +431,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
 
   const [activeTab, setActiveTab] = useState(isAdmin ? 'minhas_auditorias' : 'documentos');
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(BRANCHES[0]);
 
   // ---- Dados dinâmicos vindos do Supabase ----
@@ -500,6 +501,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
             dbId: a.id,
             raiNumber: a.rai_numero,
             date: a.data_emissao ? new Date(a.data_emissao).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' }) : '—',
+            dateRaw: a.data_emissao || null, // formato ISO (YYYY-MM-DD) — usado para agrupar por mês
             sector: a.sga_setores?.nome || '—',
             branch: a.unidade || BRANCHES[0],
             auditor: a.sga_auditores?.nome || '—',
@@ -1630,18 +1632,25 @@ Gestão da Qualidade — Kalenborn do Brasil`
   };
 
   useEffect(() => {
-    // Só recalcula automaticamente enquanto o checklist está editável (rascunho
-    // ativo ou em modo de edição). Em modo de VISUALIZAÇÃO (checklistStatus ===
-    // 'Fechado' e não está em edição), isso sobrescrevia o RAI e as observações
-    // salvos pelos valores do rascunho atualmente em aberto — mostrando dados
-    // errados na tela de "VER".
+    // As observações podem ser recalculadas sempre que o checklist estiver
+    // editável (rascunho ativo OU edição de auditoria histórica). Já o número
+    // da RAI só pode ser recalculado quando é de fato um RASCUNHO NOVO
+    // (auditoriaAtivaId setado) — durante a EDIÇÃO de uma auditoria já
+    // finalizada, auditoriaAtivaId é sempre null, e o RAI tem que permanecer
+    // o número original daquela auditoria. Sem essa distinção, reabrir uma
+    // auditoria antiga para editar sobrescrevia o RAI dela pelo próximo
+    // número "livre" do contador, gerando RAI duplicada ao salvar.
     if (activeTab === 'report' && checklistStatus !== 'Fechado') {
       const compiledObs = getCompiledObservations();
       const newObsText = checklist.some((i) => i.status === 'Obs' && i.comments) ? compiledObs : report.observations;
-      setReport((prev) => ({ ...prev, observations: newObsText, raiNumber: dynamicRaiNumber }));
+      setReport((prev) => ({
+        ...prev,
+        observations: newObsText,
+        raiNumber: auditoriaAtivaId ? dynamicRaiNumber : prev.raiNumber
+      }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, checklist, dynamicRaiNumber, checklistStatus]);
+  }, [activeTab, checklist, dynamicRaiNumber, checklistStatus, auditoriaAtivaId]);
 
   // Itens NC do checklist ativo que ainda não têm RNC vinculada
   const ncItemsWithoutRnc = useMemo(() => {
@@ -1981,6 +1990,25 @@ Gestão da Qualidade — Kalenborn do Brasil`
   const conformityIndex = savedAudits.length > 0
     ? Math.round((auditsWithZeroNc / savedAudits.length) * 100)
     : 100;
+
+  // Auditorias concluídas por mês (últimos 6 meses) — dá pra ver de cara se as
+  // datas estão certas (ex.: tudo empilhado no mesmo mês é sinal de alerta) e
+  // se o ritmo de auditorias está caindo ou subindo.
+  const auditoriasPorMes = (() => {
+    const meses = [];
+    const hoje = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+      meses.push({ key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, label: d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''), count: 0 });
+    }
+    savedAudits.forEach((a) => {
+      if (!a.dateRaw) return;
+      const key = a.dateRaw.slice(0, 7); // YYYY-MM
+      const alvo = meses.find((m) => m.key === key);
+      if (alvo) alvo.count += 1;
+    });
+    return meses;
+  })();
   const effectivenessIndex = (() => {
     const closed = rncs.filter((r) => r.effective === 'Sim').length;
     const evaluated = rncs.filter((r) => r.effective === 'Sim' || r.effective === 'Não').length;
@@ -2097,6 +2125,30 @@ Gestão da Qualidade — Kalenborn do Brasil`
       </div>
 
 
+      {/* Ritmo de auditorias por mês — ajuda a notar datas erradas (tudo empilhado
+          num mês só) e a acompanhar se o ritmo de auditorias está em dia */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div className="mb-5">
+          <h3 className="text-base font-bold text-slate-800">Auditorias Concluídas por Mês</h3>
+          <p className="text-slate-500 text-xs mt-0.5">Últimos 6 meses, pela data de emissão registrada em cada auditoria</p>
+        </div>
+        <div className="flex items-end justify-between gap-3 h-32">
+          {(() => {
+            const maxCount = Math.max(1, ...auditoriasPorMes.map((m) => m.count));
+            return auditoriasPorMes.map((m) => (
+              <div key={m.key} className="flex-1 flex flex-col items-center justify-end h-full">
+                <span className="text-xs font-black text-slate-700 mb-1">{m.count}</span>
+                <div
+                  className={`w-full rounded-t-lg transition-all ${m.count > 0 ? 'bg-indigo-500' : 'bg-slate-100'}`}
+                  style={{ height: `${Math.max(6, (m.count / maxCount) * 100)}%` }}
+                />
+                <span className="text-[11px] font-bold text-slate-400 uppercase mt-2">{m.label}</span>
+              </div>
+            ));
+          })()}
+        </div>
+      </div>
+
       {/* Histórico geral — agrega TODAS as auditorias já concluídas (não só a atual) */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <div className="flex justify-between items-center mb-5">
@@ -2189,41 +2241,46 @@ Gestão da Qualidade — Kalenborn do Brasil`
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden lg:col-span-2">
           <div className="p-5 border-b border-slate-100 flex justify-between items-center">
             <h3 className="text-base font-bold text-slate-800">Últimas Auditorias Concluídas</h3>
-            <button onClick={() => setActiveTab('gestao')} className="text-xs text-indigo-600 font-bold hover:underline">Ver Histórico Completo</button>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-400 font-medium">{savedAudits.length} no total</span>
+              <button onClick={() => setActiveTab('gestao')} className="text-xs text-indigo-600 font-bold hover:underline">Ver Histórico Completo</button>
+            </div>
           </div>
           {savedAudits.length === 0 ? (
             <div className="p-10 text-center text-slate-400 text-sm font-medium">Nenhuma auditoria concluída ainda.</div>
           ) : (
-            <table className="w-full text-left border-collapse font-sans text-sm">
-              <thead>
-                <tr className="bg-slate-50 text-slate-400 text-[11px] uppercase tracking-wider">
-                  <th className="p-4 font-bold">Nº RAI</th>
-                  <th className="p-4 font-bold">Data</th>
-                  <th className="p-4 font-bold">Setor</th>
-                  <th className="p-4 font-bold">Auditor</th>
-                  <th className="p-4 font-bold text-center">NCs</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {savedAudits.slice(0, 4).map((audit) => (
-                  <tr
-                    key={audit.id}
-                    onClick={() => loadAudit(audit)}
-                    className="hover:bg-indigo-50/60 transition-colors cursor-pointer"
-                  >
-                    <td className="p-4 font-bold text-slate-800 font-mono">{audit.raiNumber}</td>
-                    <td className="p-4 text-slate-500">{audit.date}</td>
-                    <td className="p-4 font-semibold text-slate-700">{audit.sector}</td>
-                    <td className="p-4 text-slate-500">{audit.auditor}</td>
-                    <td className="p-4 text-center">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-black ${audit.ncCount > 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                        {audit.ncCount}
-                      </span>
-                    </td>
+            <div className="overflow-x-auto overflow-y-auto max-h-[420px]">
+              <table className="w-full text-left border-collapse font-sans text-sm min-w-[560px]">
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-slate-50 text-slate-400 text-[11px] uppercase tracking-wider">
+                    <th className="p-4 font-bold">Nº RAI</th>
+                    <th className="p-4 font-bold">Data</th>
+                    <th className="p-4 font-bold">Setor</th>
+                    <th className="p-4 font-bold">Auditor</th>
+                    <th className="p-4 font-bold text-center">NCs</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {savedAudits.map((audit) => (
+                    <tr
+                      key={audit.id}
+                      onClick={() => loadAudit(audit)}
+                      className="hover:bg-indigo-50/60 transition-colors cursor-pointer"
+                    >
+                      <td className="p-4 font-bold text-slate-800 font-mono whitespace-nowrap">{audit.raiNumber}</td>
+                      <td className="p-4 text-slate-500 whitespace-nowrap">{audit.date}</td>
+                      <td className="p-4 font-semibold text-slate-700">{audit.sector}</td>
+                      <td className="p-4 text-slate-500">{audit.auditor}</td>
+                      <td className="p-4 text-center">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-black ${audit.ncCount > 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                          {audit.ncCount}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
@@ -2809,7 +2866,15 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <div className="w-[15%] p-2 border-r-2 border-black font-bold bg-gray-100 flex items-center">Auditoria Inicial:</div>
           <div className="w-[20%] p-2 border-r-2 border-black flex items-center justify-center bg-white"><input type="text" className="w-full text-center focus:outline-none bg-transparent" defaultValue={formattedDate} readOnly /></div>
           <div className="w-[15%] p-2 border-r-2 border-black font-bold bg-gray-100 flex items-center">Data de Emissão:</div>
-          <div className="w-[15%] p-2 border-r-2 border-black flex items-center justify-center bg-white"><input type="text" className="w-full text-center focus:outline-none bg-transparent" value={report.date} readOnly /></div>
+          <div className="w-[15%] p-2 border-r-2 border-black flex items-center justify-center bg-white">
+            <input
+              type="date"
+              className="w-full text-center focus:outline-none bg-transparent disabled:cursor-not-allowed"
+              value={report.date || ''}
+              onChange={(e) => setReport({ ...report, date: e.target.value })}
+              disabled={isChecklistLocked}
+            />
+          </div>
           <div className="w-[10%] p-2 border-r-2 border-black font-bold bg-gray-100 flex items-center">Unidade:</div>
           <div className="w-[25%] p-2 flex items-center justify-center bg-white">
             <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)} className="w-full text-center focus:outline-none font-bold bg-transparent cursor-pointer">
@@ -2849,6 +2914,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <div className="w-[20%] p-2 border-r-2 border-black font-bold bg-gray-100 flex items-center">Auditor Líder:</div>
           <div className="w-[80%] p-2">
             <select value={report.auditor} onChange={(e) => setReport({ ...report, auditor: e.target.value })} className="w-full focus:outline-none bg-transparent font-bold cursor-pointer">
+              <option value="">-- Selecione o auditor --</option>
               {auditoresDb.map((a) => <option key={a.id} value={a.nome}>{a.nome}</option>)}
             </select>
           </div>
@@ -3880,10 +3946,23 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
   return (
     <div className="min-h-screen bg-[#F4F5F9] flex font-sans">
-      {/* SIDEBAR */}
-      <aside className="w-[280px] bg-[#0B1020] text-slate-300 flex flex-col shadow-2xl z-20 hidden md:flex print:hidden">
+      {/* Overlay escuro atrás do menu quando aberto no mobile — toca fora pra fechar */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* SIDEBAR — vira painel deslizante no mobile (fixed + translate), fica fixo normalmente a partir de md */}
+      <aside className={`w-[280px] bg-[#0B1020] text-slate-300 flex flex-col shadow-2xl z-40 print:hidden fixed inset-y-0 left-0 transition-transform duration-200 md:static md:translate-x-0 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 border-b border-white/5 bg-gradient-to-br from-[#0B1020] to-[#10142B]">
-          <KalenLogo variant="sidebar" />
+          <div className="flex items-center justify-between">
+            <KalenLogo variant="sidebar" />
+            <button onClick={() => setMobileMenuOpen(false)} className="md:hidden text-slate-400 hover:text-white p-1">
+              <X size={20} />
+            </button>
+          </div>
           <div className="mt-3 flex items-center gap-2">
             <div className="w-5 h-px bg-indigo-600/60"></div>
             <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Sistema de Gestão de Auditoria</p>
@@ -3913,7 +3992,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                 </div>
               )}
               <button
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id ? 'bg-indigo-600/15 text-indigo-300 font-bold' : 'hover:bg-white/5 hover:text-white font-medium text-slate-400'}`}
               >
                 <item.icon size={19} className={activeTab === item.id ? 'text-indigo-400' : ''} />
@@ -3963,9 +4042,16 @@ Gestão da Qualidade — Kalenborn do Brasil`
       {/* ÁREA PRINCIPAL */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
 
-        <header className="h-16 bg-white border-b border-slate-200 shadow-sm flex items-center justify-between px-8 z-10 print:hidden">
-          <div className="flex items-center gap-4 text-slate-500 font-medium text-sm">
-            <span className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg text-slate-700 font-bold">
+        <header className="h-16 bg-white border-b border-slate-200 shadow-sm flex items-center justify-between px-4 md:px-8 z-10 print:hidden gap-3">
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="md:hidden text-slate-500 hover:text-indigo-600 p-2 -ml-2 shrink-0"
+            aria-label="Abrir menu"
+          >
+            <Menu size={22} />
+          </button>
+          <div className="flex items-center gap-4 text-slate-500 font-medium text-sm overflow-x-auto">
+            <span className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg text-slate-700 font-bold shrink-0">
               <Building2 size={16} className="text-indigo-600" /> {selectedBranch}
             </span>
             {!isAdmin && (
@@ -4029,7 +4115,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto bg-[#F4F5F9] p-8 print:p-0 print:bg-white">
+        <main className="flex-1 overflow-auto bg-[#F4F5F9] p-4 md:p-8 print:p-0 print:bg-white">
           <div className="max-w-7xl mx-auto print-area">
             {activeTab === 'dashboard'         && renderDashboard()}
             {activeTab === 'minhas_auditorias' && renderMinhasAuditorias()}
