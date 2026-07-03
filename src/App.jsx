@@ -1630,7 +1630,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
     // Quantidade de RNCs abertas para ESTA auditoria — casa pelo número de RAI
     // (mais preciso que só o setor, já que um setor pode ter várias auditorias
     // ao longo do tempo, cada uma com seu próprio RAI).
-    const rncsDestaAuditoria = rncs.filter((r) => r.sourceRaiNumber === report.raiNumber || r.process === selectedSector);
+    const rncsDestaAuditoria = rncs.filter((r) => r.sourceRaiNumber === report.raiNumber);
     const rncLine = rncsDestaAuditoria.length > 0
       ? `${rncsDestaAuditoria.length} RNC${rncsDestaAuditoria.length > 1 ? 's' : ''} aberta(s)/registrada(s) para este processo: ${rncsDestaAuditoria.map((r) => r.id).join(', ')}.`
       : '';
@@ -1656,7 +1656,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
     if (activeTab === 'report' && checklistStatus !== 'Fechado') {
       const compiledObs = getCompiledObservations();
       const temObsOuRnc = checklist.some((i) => i.status === 'Obs' && i.comments)
-        || rncs.some((r) => r.sourceRaiNumber === report.raiNumber || r.process === selectedSector);
+        || rncs.some((r) => r.sourceRaiNumber === report.raiNumber);
       const newObsText = temObsOuRnc ? compiledObs : report.observations;
       setReport((prev) => ({
         ...prev,
@@ -2640,8 +2640,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
             </tr>
           </thead>
           <tbody className="divide-y-2 divide-black">
-            {checklist.map((item, idx) => (
-              <tr key={item.id} className="hover:bg-blue-50 transition-colors group">
+            {checklist.map((item, idx) => {
+              const ncSemEvidencia = item.status === 'NC' && !item.comments.trim();
+              return (
+              <tr key={item.id} className={`hover:bg-blue-50 transition-colors group ${ncSemEvidencia ? 'bg-rose-50/60' : ''}`}>
                 <td className="p-3 text-center text-black font-bold border-r-2 border-black align-top bg-gray-50 group-hover:bg-blue-100">{idx + 1}</td>
                 <td className="p-3 text-sm text-black border-r-2 border-black align-top font-medium">
                   <textarea
@@ -2658,8 +2660,15 @@ Gestão da Qualidade — Kalenborn do Brasil`
                     rows="2" value={item.comments} onChange={(e) => handleChecklistChange(item.id, 'comments', e.target.value)}
                     placeholder="Registrar evidência objetiva..."
                     readOnly={isChecklistLocked}
-                    className="w-full text-sm p-2 bg-transparent border-0 focus:ring-0 focus:outline-none resize-y min-h-[60px] italic text-gray-700"
+                    className={`w-full text-sm p-2 bg-transparent border-0 focus:ring-0 focus:outline-none resize-y min-h-[60px] italic text-gray-700 ${
+                      ncSemEvidencia ? 'ring-2 ring-rose-400 rounded-md' : ''
+                    }`}
                   ></textarea>
+                  {ncSemEvidencia && (
+                    <p className="text-[11px] font-bold text-rose-600 mt-1 flex items-center gap-1 print:hidden">
+                      <AlertCircle size={12} /> Item NC precisa de evidência pra poder salvar a auditoria
+                    </p>
+                  )}
                 </td>
                 <td className="p-3 align-top bg-white">
                   <div className="flex flex-col gap-1">
@@ -2699,7 +2708,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
                   </td>
                 )}
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
 
