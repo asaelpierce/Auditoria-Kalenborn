@@ -2741,18 +2741,22 @@ Gestão da Qualidade — Kalenborn do Brasil`
                     onChange={(e) => handleChecklistChange(item.id, 'question', e.target.value)}
                     placeholder="Digite a pergunta do roteiro de auditoria..."
                     readOnly={isChecklistLocked}
-                    className="w-full text-sm p-0 bg-transparent border-0 focus:ring-0 focus:outline-none resize-y min-h-[40px] font-medium disabled:cursor-default"
+                    className="w-full text-sm p-0 bg-transparent border-0 focus:ring-0 focus:outline-none resize-y min-h-[40px] font-medium disabled:cursor-default print:hidden"
                   ></textarea>
+                  <div className="hidden print:block whitespace-pre-wrap">{item.question}</div>
                 </td>
                 <td className="p-3 border-r-2 border-black align-top">
                   <textarea
                     rows="2" value={item.comments} onChange={(e) => handleChecklistChange(item.id, 'comments', e.target.value)}
                     placeholder="Registrar evidência objetiva..."
                     readOnly={isChecklistLocked}
-                    className={`w-full text-sm p-2 bg-transparent border-0 focus:ring-0 focus:outline-none resize-y min-h-[60px] italic text-gray-700 ${
+                    className={`w-full text-sm p-2 bg-transparent border-0 focus:ring-0 focus:outline-none resize-y min-h-[60px] italic text-gray-700 print:hidden ${
                       ncSemEvidencia ? 'ring-2 ring-rose-400 rounded-md' : ''
                     }`}
                   ></textarea>
+                  {/* Versão só de impressão — o textarea acima corta evidências longas
+                      quando impresso/exportado em PDF; essa div mostra o texto INTEIRO. */}
+                  <div className="hidden print:block whitespace-pre-wrap italic text-gray-700 p-2">{item.comments}</div>
                   {ncSemEvidencia && (
                     <p className="text-[11px] font-bold text-rose-600 mt-1 flex items-center gap-1 print:hidden">
                       <AlertCircle size={12} /> Item NC precisa de evidência pra poder salvar a auditoria
@@ -3015,17 +3019,22 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
         <div className="bg-gray-300 font-bold p-2 border-b-2 border-black text-center uppercase tracking-wider">Pontos Fortes / Positivos Identificados</div>
         <div className="border-b-2 border-black bg-white p-4">
-          <textarea className="w-full focus:outline-none resize-y min-h-[80px] bg-transparent" placeholder="Ex.: 1 - Cordialidade do auditado..." value={report.positivePoints} onChange={(e) => setReport({ ...report, positivePoints: e.target.value })}></textarea>
+          <textarea className="w-full focus:outline-none resize-y min-h-[80px] bg-transparent print:hidden" placeholder="Ex.: 1 - Cordialidade do auditado..." value={report.positivePoints} onChange={(e) => setReport({ ...report, positivePoints: e.target.value })}></textarea>
+          {/* Versão só de impressão — o textarea acima corta o texto que passa da altura visível
+              quando impresso/exportado em PDF; essa div mostra o conteúdo INTEIRO, sem corte. */}
+          <div className="hidden print:block whitespace-pre-wrap">{report.positivePoints}</div>
         </div>
 
         <div className="bg-gray-300 font-bold p-2 border-b-2 border-black text-center uppercase tracking-wider">Observações Pertinentes (Geradas pelo Checklist)</div>
         <div className="border-b-2 border-black bg-white p-4">
-          <textarea className="w-full focus:outline-none resize-y min-h-[80px] bg-transparent" value={report.observations} onChange={(e) => setReport({ ...report, observations: e.target.value })}></textarea>
+          <textarea className="w-full focus:outline-none resize-y min-h-[80px] bg-transparent print:hidden" value={report.observations} onChange={(e) => setReport({ ...report, observations: e.target.value })}></textarea>
+          <div className="hidden print:block whitespace-pre-wrap">{report.observations}</div>
         </div>
 
         <div className="bg-gray-300 font-bold p-2 border-b-2 border-black text-center uppercase tracking-wider">Oportunidades e Sugestões de Melhoria</div>
         <div className="border-b-2 border-black bg-white p-4">
-          <textarea className="w-full focus:outline-none resize-y min-h-[80px] bg-transparent" placeholder="Ex.: 1 - Definir qual setor será responsável por..." value={report.improvements} onChange={(e) => setReport({ ...report, improvements: e.target.value })}></textarea>
+          <textarea className="w-full focus:outline-none resize-y min-h-[80px] bg-transparent print:hidden" placeholder="Ex.: 1 - Definir qual setor será responsável por..." value={report.improvements} onChange={(e) => setReport({ ...report, improvements: e.target.value })}></textarea>
+          <div className="hidden print:block whitespace-pre-wrap">{report.improvements}</div>
         </div>
 
         <div className="flex border-b-2 border-black bg-yellow-50">
@@ -3037,7 +3046,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
         <div className="bg-gray-300 font-bold p-2 border-b-2 border-black text-center uppercase tracking-wider">Conclusão Oficial da Auditoria</div>
         <div className="border-b-2 border-black bg-white p-4">
-          <textarea className="w-full text-center focus:outline-none resize-y min-h-[80px] font-medium bg-transparent" placeholder="Ex.: O processo atende parcialmente aos requisitos do SGQ." value={report.conclusion} onChange={(e) => setReport({ ...report, conclusion: e.target.value })}></textarea>
+          <textarea className="w-full text-center focus:outline-none resize-y min-h-[80px] font-medium bg-transparent print:hidden" placeholder="Ex.: O processo atende parcialmente aos requisitos do SGQ." value={report.conclusion} onChange={(e) => setReport({ ...report, conclusion: e.target.value })}></textarea>
+          <div className="hidden print:block whitespace-pre-wrap text-center font-medium">{report.conclusion}</div>
         </div>
 
         <div className="flex text-center bg-gray-50">
@@ -3202,7 +3212,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
           <div className="bg-gray-300 font-bold p-2 border-b-2 border-black text-center uppercase tracking-wider">Descrição Detalhada da Não Conformidade</div>
           <div className="border-b-2 border-black bg-white p-4">
-            <textarea className="w-full focus:outline-none resize-y min-h-[80px] text-red-900 font-medium bg-red-50 p-2 rounded" value={rnc.description} onChange={(e) => handleRncChange(rnc.id, 'description', e.target.value)}></textarea>
+            <textarea className="w-full focus:outline-none resize-y min-h-[80px] text-red-900 font-medium bg-red-50 p-2 rounded print:hidden" value={rnc.description} onChange={(e) => handleRncChange(rnc.id, 'description', e.target.value)}></textarea>
+            <div className="hidden print:block whitespace-pre-wrap text-red-900 font-medium p-2">{rnc.description}</div>
           </div>
 
           <div className="bg-gray-300 font-bold p-2 border-b-2 border-black text-center uppercase tracking-wider">Ação de Correção Imediata (Disposição)</div>
@@ -3212,7 +3223,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
             <div className="w-[20%] p-2">Data Limite</div>
           </div>
           <div className="flex border-b-2 border-black bg-white">
-            <div className="w-[60%] border-r-2 border-black"><textarea className="w-full h-full p-3 focus:outline-none resize-none" value={rnc.correction} onChange={(e) => handleRncChange(rnc.id, 'correction', e.target.value)}></textarea></div>
+            <div className="w-[60%] border-r-2 border-black">
+              <textarea className="w-full h-full p-3 focus:outline-none resize-none print:hidden" value={rnc.correction} onChange={(e) => handleRncChange(rnc.id, 'correction', e.target.value)}></textarea>
+              <div className="hidden print:block whitespace-pre-wrap p-3">{rnc.correction}</div>
+            </div>
             <div className="w-[20%] border-r-2 border-black"><input type="text" className="w-full h-full p-3 focus:outline-none text-center" value={rnc.correctionResp} onChange={(e) => handleRncChange(rnc.id, 'correctionResp', e.target.value)} /></div>
             <div className="w-[20%]"><input type="date" className="w-full h-full p-3 focus:outline-none text-center" value={rnc.correctionDate} onChange={(e) => handleRncChange(rnc.id, 'correctionDate', e.target.value)} /></div>
           </div>
@@ -3224,7 +3238,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
             <div className="w-[20%] p-2">Data Conclusão</div>
           </div>
           <div className="flex border-b-2 border-black bg-white">
-            <div className="w-[60%] border-r-2 border-black"><textarea className="w-full h-full p-3 focus:outline-none resize-none bg-red-50/30" value={rnc.rootCause} onChange={(e) => handleRncChange(rnc.id, 'rootCause', e.target.value)}></textarea></div>
+            <div className="w-[60%] border-r-2 border-black">
+              <textarea className="w-full h-full p-3 focus:outline-none resize-none bg-red-50/30 print:hidden" value={rnc.rootCause} onChange={(e) => handleRncChange(rnc.id, 'rootCause', e.target.value)}></textarea>
+              <div className="hidden print:block whitespace-pre-wrap p-3">{rnc.rootCause}</div>
+            </div>
             <div className="w-[20%] border-r-2 border-black"><input type="text" className="w-full h-full p-3 focus:outline-none text-center" value={rnc.rootCauseResp} onChange={(e) => handleRncChange(rnc.id, 'rootCauseResp', e.target.value)} /></div>
             <div className="w-[20%]"><input type="date" className="w-full h-full p-3 focus:outline-none text-center" value={rnc.rootCauseDate} onChange={(e) => handleRncChange(rnc.id, 'rootCauseDate', e.target.value)} /></div>
           </div>
@@ -3237,7 +3254,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
             <div className="w-1/6 p-2 flex items-center justify-center">Status / Realizado</div>
           </div>
           <div className="flex border-b-2 border-black bg-white">
-            <div className="w-1/2 border-r-2 border-black"><textarea className="w-full h-full p-3 focus:outline-none resize-none" value={rnc.actionPlan} onChange={(e) => handleRncChange(rnc.id, 'actionPlan', e.target.value)}></textarea></div>
+            <div className="w-1/2 border-r-2 border-black">
+              <textarea className="w-full h-full p-3 focus:outline-none resize-none print:hidden" value={rnc.actionPlan} onChange={(e) => handleRncChange(rnc.id, 'actionPlan', e.target.value)}></textarea>
+              <div className="hidden print:block whitespace-pre-wrap p-3">{rnc.actionPlan}</div>
+            </div>
             <div className="w-1/6 border-r-2 border-black"><input type="text" className="w-full h-full p-3 focus:outline-none text-center" value={rnc.responsible} onChange={(e) => handleRncChange(rnc.id, 'responsible', e.target.value)} /></div>
             <div className="w-1/6 border-r-2 border-black"><input type="date" className="w-full h-full p-3 focus:outline-none text-center text-xs" value={rnc.actionPlanDatePrev} onChange={(e) => handleRncChange(rnc.id, 'actionPlanDatePrev', e.target.value)} /></div>
             <div className="w-1/6"><input type="date" className="w-full h-full p-3 focus:outline-none text-center text-xs" value={rnc.actionPlanDateReal} onChange={(e) => handleRncChange(rnc.id, 'actionPlanDateReal', e.target.value)} /></div>
@@ -3246,7 +3266,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <div className="bg-gray-300 font-bold p-2 border-b-2 border-black text-center uppercase tracking-wider">Análise Crítica da Eficácia das Ações (Validação SGQ)</div>
           <div className="p-4 border-b-2 border-black bg-white">
             <div className="font-bold text-gray-700 mb-2 uppercase text-xs tracking-wider">Evidências Coletadas após Implementação:</div>
-            <textarea className="w-full border-2 border-gray-200 p-3 focus:outline-none bg-gray-50 rounded" rows="3" value={rnc.evidence} onChange={(e) => handleRncChange(rnc.id, 'evidence', e.target.value)}></textarea>
+            <textarea className="w-full border-2 border-gray-200 p-3 focus:outline-none bg-gray-50 rounded print:hidden" rows="3" value={rnc.evidence} onChange={(e) => handleRncChange(rnc.id, 'evidence', e.target.value)}></textarea>
+            <div className="hidden print:block whitespace-pre-wrap bg-gray-50 rounded p-3">{rnc.evidence}</div>
           </div>
 
           <div className="flex border-b-2 border-black bg-gray-50">
