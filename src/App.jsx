@@ -1945,7 +1945,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
       [lbl('Processo'), val(selectedSector), cell(''), cell(''), cell(''), cell('')],
       [lbl('Metodologia'), cell('Entrevista, Amostragem e Análise de Documentos do SGQ', xlsxStyle(false, null, 'left')), cell(''), cell(''), cell(''), cell('')],
       [lbl('Objetivo'), cell('Verificar a conformidade e eficácia do Processo dentro do SGQ Kalenborn, alinhado à ISO 9001:2015.', xlsxStyle(false, null, 'left')), cell(''), cell(''), cell(''), cell('')],
-      [lbl('Auditor Líder'), val(report.auditor), cell(''), cell(''), cell(''), cell('')],
+      [lbl('Auditor Líder'), val('Luciene Batista'), cell(''), cell(''), cell(''), cell('')],
+      [lbl('Equipe / Convidados'), val(report.auditor), cell(''), cell(''), cell(''), cell('')],
       [lbl('Auditado'), val(report.auditee), cell(''), cell(''), cell(''), cell('')],
       [title('PONTOS FORTES / POSITIVOS IDENTIFICADOS'), cell(''), cell(''), cell(''), cell(''), cell('')],
       [cell(report.positivePoints || '', xlsxStyle(false, 'F9FFF9', 'left', true)), cell(''), cell(''), cell(''), cell(''), cell('')],
@@ -1957,7 +1958,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
       [title('CONCLUSÃO OFICIAL DA AUDITORIA'), cell(''), cell(''), cell(''), cell(''), cell('')],
       [cell(report.conclusion || '', xlsxStyle(false, null, 'center', true)), cell(''), cell(''), cell(''), cell(''), cell('')],
       [lbl('Assinatura do Auditor Líder'), cell(''), cell(''), lbl('Responsável SGQ Unidade'), cell(''), cell('')],
-      [cell(report.auditor || '', xlsxStyle(false, null, 'center')), cell(''), cell(''), val(selectedBranch), cell(''), cell('')],
+      [cell('Luciene Batista', xlsxStyle(false, null, 'center')), cell(''), cell(''), val(selectedBranch), cell(''), cell('')],
     ];
 
     const ws = X.utils.aoa_to_sheet(aoa);
@@ -2605,9 +2606,20 @@ Gestão da Qualidade — Kalenborn do Brasil`
             </button>
           )}
           {isChecklistLocked ? (
-            <button onClick={requestReopenChecklist} className="flex items-center gap-2 bg-amber-500 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-amber-600 transition text-sm shadow-lg shadow-amber-500/25">
-              <FolderTree size={16} /> Reabrir Checklist
-            </button>
+            editingAuditId ? (
+              <button onClick={requestReopenChecklist} className="flex items-center gap-2 bg-amber-500 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-amber-600 transition text-sm shadow-lg shadow-amber-500/25">
+                <FolderTree size={16} /> Reabrir Checklist
+              </button>
+            ) : (
+              // Modo somente visualização (clicou em "VER", não em "Editar") — não
+              // oferece reabrir aqui. Reabrir sem uma sessão de edição de verdade
+              // era a segunda forma de duplicar auditorias: o checklist parecia
+              // editável, mas o salvamento não tinha pra onde ir e acabava criando
+              // uma auditoria nova em vez de atualizar a existente.
+              <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-400 print:hidden">
+                <ShieldCheck size={16} /> Somente visualização
+              </span>
+            )
           ) : (
             <button onClick={requestCloseChecklist} className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-slate-900 transition text-sm shadow-lg shadow-slate-800/25">
               <CheckCircle size={16} /> Fechar Checklist
@@ -2857,32 +2869,45 @@ Gestão da Qualidade — Kalenborn do Brasil`
               {autoSaveStatus === 'saved' ? 'Rascunho salvo ✓' : 'Salvar Rascunho'}
             </button>
           )}
-          <button
-            onClick={() => {
-              if (saveBlockers.length > 0) {
-                notify('Auditoria incompleta', saveBlockers.join(' '));
-                return;
-              }
-              requestConfirm({
-                title: editingAuditId ? 'Salvar alterações na auditoria' : 'Confirmar salvamento da auditoria',
-                message: editingAuditId
-                  ? `Tem certeza que deseja salvar as alterações na auditoria RAI Nº ${report.raiNumber}? O histórico será atualizado.`
-                  : `Tem certeza que deseja finalizar e salvar a auditoria RAI Nº ${report.raiNumber} no histórico?`,
-                confirmLabel: editingAuditId ? 'Sim, salvar alterações' : 'Sim, salvar auditoria',
-                danger: false,
-                onConfirm: handleSaveAudit
-              });
-            }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition text-sm shadow-lg ${
-              saveBlockers.length > 0
-                ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-                : editingAuditId
-                  ? 'bg-amber-600 text-white hover:bg-amber-700 shadow-amber-600/25'
-                  : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-600/25'
-            }`}
-          >
-            <Save size={16} /> {editingAuditId ? 'Salvar Alterações' : 'Salvar no Histórico'}
-          </button>
+          {/* O botão de salvar só existe quando há algo de fato ativo pra salvar:
+              um rascunho em andamento (auditoriaAtivaId) ou uma edição em curso
+              (editingAuditId). Sem essa checagem, o botão ficava visível e
+              clicável mesmo no modo "somente visualização" (após clicar VER) —
+              e clicar nele ali criava uma auditoria NOVA duplicada do zero, ao
+              invés de não fazer nada, porque o código não via edição nem
+              rascunho ativos e tratava como se fosse uma auditoria nova. */}
+          {(auditoriaAtivaId || editingAuditId) ? (
+            <button
+              onClick={() => {
+                if (saveBlockers.length > 0) {
+                  notify('Auditoria incompleta', saveBlockers.join(' '));
+                  return;
+                }
+                requestConfirm({
+                  title: editingAuditId ? 'Salvar alterações na auditoria' : 'Confirmar salvamento da auditoria',
+                  message: editingAuditId
+                    ? `Tem certeza que deseja salvar as alterações na auditoria RAI Nº ${report.raiNumber}? O histórico será atualizado.`
+                    : `Tem certeza que deseja finalizar e salvar a auditoria RAI Nº ${report.raiNumber} no histórico?`,
+                  confirmLabel: editingAuditId ? 'Sim, salvar alterações' : 'Sim, salvar auditoria',
+                  danger: false,
+                  onConfirm: handleSaveAudit
+                });
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition text-sm shadow-lg ${
+                saveBlockers.length > 0
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                  : editingAuditId
+                    ? 'bg-amber-600 text-white hover:bg-amber-700 shadow-amber-600/25'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-600/25'
+              }`}
+            >
+              <Save size={16} /> {editingAuditId ? 'Salvar Alterações' : 'Salvar no Histórico'}
+            </button>
+          ) : (
+            <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-400 print:hidden">
+              <ShieldCheck size={16} /> Somente visualização
+            </span>
+          )}
         </div>
       </div>
 
@@ -2987,16 +3012,16 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
         <div className="flex border-b-2 border-black bg-white">
           <div className="w-[20%] p-2 border-r-2 border-black font-bold bg-gray-100 flex items-center">Auditor Líder:</div>
+          <div className="w-[80%] p-2 font-bold">Luciene Batista</div>
+        </div>
+        <div className="flex border-b-2 border-black bg-white">
+          <div className="w-[20%] p-2 border-r-2 border-black font-bold bg-gray-100 flex items-center">Equipe / Convidados:</div>
           <div className="w-[80%] p-2">
             <select value={report.auditor} onChange={(e) => setReport({ ...report, auditor: e.target.value })} className="w-full focus:outline-none bg-transparent font-bold cursor-pointer">
               <option value="">-- Selecione o auditor --</option>
               {auditoresDb.map((a) => <option key={a.id} value={a.nome}>{a.nome}</option>)}
             </select>
           </div>
-        </div>
-        <div className="flex border-b-2 border-black bg-white">
-          <div className="w-[20%] p-2 border-r-2 border-black font-bold bg-gray-100 flex items-center">Equipe / Convidados:</div>
-          <div className="w-[80%] p-2"><input type="text" className="w-full focus:outline-none bg-transparent" defaultValue="Comitê de Qualidade da Unidade" /></div>
         </div>
 
         <div className="bg-gray-300 font-bold p-2 border-b-2 border-black text-center uppercase tracking-wider">Pessoas Auditadas (Entrevistados)</div>
@@ -3054,7 +3079,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <div className="w-1/2 p-6 border-r-2 border-black flex flex-col items-center justify-end">
             <div className="w-3/4 border-b border-black mb-2"></div>
             <div className="font-bold text-gray-800">Assinatura do Auditor Líder</div>
-            <div className="text-xs text-gray-500 mt-1">{report.auditor}</div>
+            <div className="text-xs text-gray-500 mt-1">Luciene Batista</div>
           </div>
           <div className="w-1/2 p-6 flex flex-col items-center justify-end">
             <div className="w-3/4 border-b border-black mb-2"></div>
