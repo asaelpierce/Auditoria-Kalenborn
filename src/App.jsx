@@ -1981,6 +1981,69 @@ Gestão da Qualidade — Kalenborn do Brasil`
   };
 
   // ---- RNC — cada RAC em aba separada ----
+  // Exporta APENAS uma RNC específica, como arquivo próprio — pra poder mandar
+  // só aquela pro setor responsável, sem misturar com as outras no mesmo arquivo.
+  const exportSingleRncExcel = (rnc) => {
+    if (!ensureXlsxOrWarn()) return;
+    const X = XLSX;
+    const wb = X.utils.book_new();
+    const lbl = (v) => cell(v, xlsxStyle(true, 'D9D9D9', 'left'));
+    const val = (v) => cell(v || '', xlsxStyle(false, null, 'left'));
+    const sec = (v) => cell(v, xlsxStyle(true, 'BFBFBF', 'center'));
+
+    const aoa = [
+      [cell('Kalenborn — Wear Protection Solutions', xlsxStyle(true,'D9D9D9','center')), cell(''), cell('RELATÓRIO DE AÇÕES CORRETIVAS (RAC)', xlsxStyle(true,'D9D9D9','center')), cell(''), cell('Nº R.A.C', xlsxHeader()), cell(rnc.id, xlsxStyle(true,'FFE0E0','center'))],
+      [lbl('Processo'), cell(rnc.process||'', xlsxStyle(true,null,'left')), cell(''), lbl('Data de Emissão'), val(rnc.date), cell('')],
+      [lbl('Origem'), cell(rnc.origin||'AUDITORIA INTERNA', xlsxStyle(false,null,'left')), cell(''), lbl('Unidade'), val(selectedBranch), cell('')],
+      [sec('DESCRIÇÃO DA NÃO CONFORMIDADE'), cell(''), cell(''), cell(''), cell(''), cell('')],
+      [cell(rnc.description||'', xlsxStyle(false,'FFF0F0','left',true)), cell(''), cell(''), cell(''), cell(''), cell('')],
+      [sec('AÇÃO DE CORREÇÃO IMEDIATA'), cell(''), lbl('Responsável'), val(rnc.correctionResp), lbl('Data Limite'), val(rnc.correctionDate)],
+      [cell(rnc.correction||'', xlsxStyle(false,null,'left',true)), cell(''), cell(''), cell(''), cell(''), cell('')],
+      [sec('ANÁLISE DE CAUSA RAIZ'), cell(''), lbl('Líder da Análise'), val(rnc.rootCauseResp), lbl('Data Conclusão'), val(rnc.rootCauseDate)],
+      [cell(rnc.rootCause||'', xlsxStyle(false,'FFF5F5','left',true)), cell(''), cell(''), cell(''), cell(''), cell('')],
+      [sec('PLANO DE AÇÃO'), cell(''), lbl('Responsável'), val(rnc.responsible), lbl('Previsto'), val(rnc.actionPlanDatePrev)],
+      [cell(rnc.actionPlan||'', xlsxStyle(false,null,'left',true)), cell(''), cell(''), cell(''), lbl('Realizado'), val(rnc.actionPlanDateReal)],
+      [sec('EVIDÊNCIAS E ANÁLISE DE EFICÁCIA'), cell(''), cell(''), cell(''), cell(''), cell('')],
+      [cell(rnc.evidence||'', xlsxStyle(false,'F9FFF9','left',true)), cell(''), cell(''), cell(''), cell(''), cell('')],
+      [lbl('Ação foi Eficaz?'), cell(rnc.effective||'', xlsxStyle(true,null,'center')), cell(''), lbl('Necessita Nova RNC?'), cell(rnc.newRnc||'', xlsxStyle(true,null,'center')), cell('')],
+      [lbl('Data Fechamento'), val(rnc.closeDate), cell(''), lbl('Validador SGQ'), val(rnc.closeResp), cell('')],
+      [lbl('Status'), cell(rnc.status||'Aberta', xlsxStyle(true, rnc.status==='Fechada'?'CCFFCC':'FFE0E0','center')), cell(''), cell(''), cell(''), cell('')],
+    ];
+
+    const ms = [
+      {s:{r:0,c:0},e:{r:0,c:1}}, {s:{r:0,c:2},e:{r:0,c:3}},
+      {s:{r:1,c:1},e:{r:1,c:2}}, {s:{r:2,c:1},e:{r:2,c:2}},
+      ...[3,7,9,11].map(r=>({s:{r,c:0},e:{r,c:5}})),
+      ...[4,8,12].map(r=>({s:{r,c:0},e:{r,c:5}})),
+      {s:{r:5,c:0},e:{r:5,c:1}}, {s:{r:6,c:0},e:{r:6,c:1}},
+      {s:{r:7,c:0},e:{r:7,c:1}}, {s:{r:9,c:0},e:{r:9,c:1}},
+      {s:{r:10,c:0},e:{r:10,c:3}}, {s:{r:10,c:4},e:{r:10,c:5}},
+      {s:{r:13,c:0},e:{r:13,c:2}}, {s:{r:13,c:3},e:{r:13,c:5}},
+      {s:{r:14,c:0},e:{r:14,c:2}}, {s:{r:14,c:3},e:{r:14,c:5}},
+      {s:{r:15,c:1},e:{r:15,c:5}},
+    ];
+
+    const ws = X.utils.aoa_to_sheet(aoa);
+    ws['!merges'] = ms;
+    ws['!cols'] = [{wch:18},{wch:18},{wch:10},{wch:18},{wch:14},{wch:14}];
+    ws['!rows'] = [{hpt:24},{hpt:20},{hpt:20},{hpt:18},{hpt:60},{hpt:18},{hpt:60},{hpt:18},{hpt:60},{hpt:18},{hpt:60},{hpt:18},{hpt:60},{hpt:20},{hpt:20},{hpt:20}];
+    X.utils.book_append_sheet(wb, ws, `RAC_${String(rnc.id).substring(0,10)}`);
+
+    const processoSlug = (rnc.process || 'RNC').replace(/[^a-zA-Z0-9]/g, '_');
+    downloadWorkbook(wb, `RAC_${rnc.id}_${processoSlug}.xlsx`);
+  };
+
+  // Imprime/exporta em PDF SOMENTE uma RNC específica — esconde todas as outras
+  // temporariamente na hora de imprimir, e desfaz assim que a impressão termina.
+  const [printOnlyRncId, setPrintOnlyRncId] = useState(null);
+  const printSingleRnc = (rncId) => {
+    setPrintOnlyRncId(rncId);
+    setTimeout(() => {
+      window.print();
+      setPrintOnlyRncId(null);
+    }, 50);
+  };
+
   const exportRncExcel = () => {
     if (!ensureXlsxOrWarn()) return;
     const X = XLSX;
@@ -3177,11 +3240,32 @@ Gestão da Qualidade — Kalenborn do Brasil`
           Nenhuma RNC com status "{rncStatusFilter}"{rncScopeFilter === 'setor' && temAuditoriaAberta ? ` em ${selectedSector}` : ''}.
         </div>
       ) : visibleRncs.map((rnc) => (
-        <div key={rnc.id} className="bg-white border-2 border-black font-sans text-sm relative mb-8 shadow-xl max-w-[1000px] mx-auto print:shadow-none print:border-0 print:w-full">
-          <div className="absolute -top-4 -right-4 print:hidden">
+        <div
+          key={rnc.id}
+          className={`bg-white border-2 border-black font-sans text-sm relative mb-8 shadow-xl max-w-[1000px] mx-auto print:shadow-none print:border-0 print:w-full ${
+            printOnlyRncId && printOnlyRncId !== rnc.id ? 'print:hidden' : ''
+          }`}
+        >
+          <div className="absolute -top-4 -right-4 print:hidden flex items-center gap-2">
             <span className={`px-4 py-1 text-xs font-black uppercase tracking-wider rounded-full shadow-lg border-2 ${rnc.status === 'Aberta' ? 'bg-amber-400 border-amber-600 text-amber-900' : 'bg-emerald-500 border-emerald-700 text-white'}`}>
               Status: {rnc.status}
             </span>
+          </div>
+          <div className="absolute -top-4 left-4 print:hidden flex items-center gap-2">
+            <button
+              onClick={() => exportSingleRncExcel(rnc)}
+              title={`Baixar só a RNC ${rnc.id} em Excel`}
+              className="flex items-center gap-1.5 bg-white border-2 border-emerald-600 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold shadow-md hover:bg-emerald-50 transition"
+            >
+              <FileSpreadsheet size={13} /> Baixar esta RNC
+            </button>
+            <button
+              onClick={() => printSingleRnc(rnc.id)}
+              title={`Imprimir/gerar PDF só da RNC ${rnc.id}`}
+              className="flex items-center gap-1.5 bg-white border-2 border-slate-700 text-slate-700 px-3 py-1 rounded-full text-xs font-bold shadow-md hover:bg-slate-50 transition"
+            >
+              <Printer size={13} /> Imprimir esta RNC
+            </button>
           </div>
 
           <div className="flex border-b-2 border-black">
