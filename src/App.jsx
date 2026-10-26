@@ -63,8 +63,11 @@ const KalenLogo = ({ variant = 'full', className = '' }) => {
 // ---------------------------------------------------------------------------
 // SUPABASE — funções de acesso ao banco e storage
 // ---------------------------------------------------------------------------
-const SUPABASE_URL = 'https://zybkcpvdptabxkxpieuv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp5YmtjcHZkcHRhYnhreHBpZXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjU2MjUsImV4cCI6MjA5NjYwMTYyNX0.2BPIEHBuURfelci8YSVt7_PViJWMC1n853J2a3KC3HU';
+// Projeto próprio do SGA. Antes dividia o banco com o RH, o que
+// misturava dois assuntos sem relação. Os dados foram migrados e
+// conferidos por soma de verificação antes da troca.
+const SUPABASE_URL = 'https://uxfymiqavbrmvfvzhuul.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4ZnltaXFhdmJybXZmdnpodXVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMjY4ODYsImV4cCI6MjEwODYwMjg4Nn0.seKaOCeoVpX8E7v7osXP-GuBMtO1qm3zyczLpMrkiUs';
 const SGA_BUCKET = 'sga-documentos';
 
 const supaFetch = async (path, opts = {}) => {
@@ -3373,12 +3376,6 @@ Gestão da Qualidade — Kalenborn do Brasil`
           </div>
 
           <div className="bg-gray-300 font-bold p-2 border-b-2 border-black text-center uppercase tracking-wider">Análise Crítica da Eficácia das Ações (Validação SGQ)</div>
-          <div className="p-4 border-b-2 border-black bg-white">
-            <div className="font-bold text-gray-700 mb-2 uppercase text-xs tracking-wider">Evidências Coletadas após Implementação:</div>
-            <textarea className="w-full border-2 border-gray-200 p-3 focus:outline-none bg-gray-50 rounded print:hidden" rows="3" value={rnc.evidence} onChange={(e) => handleRncChange(rnc.id, 'evidence', e.target.value)}></textarea>
-            <div className="hidden print:block whitespace-pre-wrap bg-gray-50 rounded p-3">{rnc.evidence}</div>
-          </div>
-
           <div className="flex border-b-2 border-black bg-gray-50">
             <div className="w-1/2 border-r-2 border-black p-4 flex items-center justify-center gap-6">
               <span className="font-bold uppercase text-sm">Ação foi Eficaz?</span>
@@ -3423,10 +3420,6 @@ Gestão da Qualidade — Kalenborn do Brasil`
             </button>
             <button
               onClick={() => {
-                if (rnc.status === 'Aberta' && !rnc.evidence.trim()) {
-                  notify('Faltam evidências', 'Registre as evidências coletadas após a implementação antes de fechar esta RNC.');
-                  return;
-                }
                 requestConfirm({
                   title: rnc.status === 'Aberta' ? 'Confirmar fechamento da RNC' : 'Confirmar reabertura da RNC',
                   message: rnc.status === 'Aberta'
