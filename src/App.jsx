@@ -1122,20 +1122,7 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
 
   const requestConfirm = (config) => setConfirmAction(config);
 
-  // Esc fecha o que estiver aberto. Sem isso o modal de nova auditoria
-  // prendia a tela: cobria o menu lateral e só saía pelo Cancelar.
-  React.useEffect(() => {
-    const aoTeclar = (e) => {
-      if (e.key !== 'Escape') return;
-      if (confirmAction) { setConfirmAction(null); return; }
-      if (showNovaAuditoria) { setShowNovaAuditoria(false); return; }
-      if (docDraft) { setDocDraft(null); setDocUploadFile(null); setDocUploadError(''); return; }
-      if (eventDraft) { setEventDraft(null); return; }
-      if (showAdminPanel) { setShowAdminPanel(false); }
-    };
-    window.addEventListener('keydown', aoTeclar);
-    return () => window.removeEventListener('keydown', aoTeclar);
-  }, [confirmAction, showNovaAuditoria, docDraft, eventDraft, showAdminPanel]);
+
   const closeConfirm = () => setConfirmAction(null);
   const handleConfirmedAction = () => {
     if (confirmAction && typeof confirmAction.onConfirm === 'function') {
@@ -2439,6 +2426,23 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
   const [novoSetor, setNovoSetor] = useState('');
   const [showNovaAuditoria, setShowNovaAuditoria] = useState(false);
+
+  // Esc fecha o que estiver aberto, do mais acima para o mais abaixo.
+  // Precisa ficar DEPOIS de todos os estados que lê: declarado antes
+  // deles, o JavaScript quebra com "Cannot access before initialization"
+  // — foi o que derrubou a versão anterior em produção.
+  React.useEffect(() => {
+    const aoTeclar = (e) => {
+      if (e.key !== 'Escape') return;
+      if (confirmAction) { setConfirmAction(null); return; }
+      if (showNovaAuditoria) { setShowNovaAuditoria(false); return; }
+      if (docDraft) { setDocDraft(null); setDocUploadFile(null); setDocUploadError(''); return; }
+      if (eventDraft) { setEventDraft(null); return; }
+      if (showAdminPanel) { setShowAdminPanel(false); }
+    };
+    window.addEventListener('keydown', aoTeclar);
+    return () => window.removeEventListener('keydown', aoTeclar);
+  }, [confirmAction, showNovaAuditoria, docDraft, eventDraft, showAdminPanel]);
 
   const renderCarregandoAuditoria = () => (
     <div className="flex flex-col items-center justify-center py-24 text-slate-400 animate-fade-in">
