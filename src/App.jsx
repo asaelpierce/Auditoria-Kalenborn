@@ -1121,6 +1121,21 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
   const usingGenericChecklist = !templateMap[selectedSector];
 
   const requestConfirm = (config) => setConfirmAction(config);
+
+  // Esc fecha o que estiver aberto. Sem isso o modal de nova auditoria
+  // prendia a tela: cobria o menu lateral e só saía pelo Cancelar.
+  React.useEffect(() => {
+    const aoTeclar = (e) => {
+      if (e.key !== 'Escape') return;
+      if (confirmAction) { setConfirmAction(null); return; }
+      if (showNovaAuditoria) { setShowNovaAuditoria(false); return; }
+      if (docDraft) { setDocDraft(null); setDocUploadFile(null); setDocUploadError(''); return; }
+      if (eventDraft) { setEventDraft(null); return; }
+      if (showAdminPanel) { setShowAdminPanel(false); }
+    };
+    window.addEventListener('keydown', aoTeclar);
+    return () => window.removeEventListener('keydown', aoTeclar);
+  }, [confirmAction, showNovaAuditoria, docDraft, eventDraft, showAdminPanel]);
   const closeConfirm = () => setConfirmAction(null);
   const handleConfirmedAction = () => {
     if (confirmAction && typeof confirmAction.onConfirm === 'function') {
@@ -2489,8 +2504,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
         {/* Modal nova auditoria */}
         {showNovaAuditoria && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+               onClick={() => setShowNovaAuditoria(false)}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4"
+                 onClick={(e) => e.stopPropagation()}>
               <h3 className="text-lg font-black text-slate-900">Nova Auditoria</h3>
               <p className="text-sm text-slate-500">Selecione o setor. <strong>Não será possível trocar depois.</strong></p>
               <select
