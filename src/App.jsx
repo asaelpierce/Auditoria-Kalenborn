@@ -219,7 +219,7 @@ const LoginScreen = ({ onLogin, extraAdmins = [] }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0B1020] via-[#10142B] to-[#0B1020] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-grafite-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-10">
           <img
@@ -230,22 +230,22 @@ const LoginScreen = ({ onLogin, extraAdmins = [] }) => {
         </div>
         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-3xl p-8 shadow-2xl">
           <div className="mb-6">
-            <h1 className="text-2xl font-black text-white tracking-tight">Portal da Qualidade</h1>
-            <p className="text-slate-400 text-sm mt-1">Sistema de Gestão de Auditoria — Unidade Vespasiano</p>
+            <h1 className="text-[22px] leading-snug font-semibold tracking-tightish text-white tracking-tight">Portal da Qualidade</h1>
+            <p className="text-grafite-400 text-sm mt-1">Sistema de Gestão de Auditoria — Unidade Vespasiano</p>
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">E-mail corporativo</label>
+              <label className="text-xs font-bold text-grafite-400 uppercase tracking-wider mb-1.5 block">E-mail corporativo</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu.nome@kalenborn.com.br" required autoComplete="email"
-                className="w-full bg-white/10 border border-white/10 text-white placeholder-slate-500 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                className="w-full bg-white/10 border border-white/10 text-white placeholder-grafite-500 rounded-xl p-3 text-sm focus:ring-2 focus:ring-grafite-700 focus:outline-none" />
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Senha</label>
+              <label className="text-xs font-bold text-grafite-400 uppercase tracking-wider mb-1.5 block">Senha</label>
               <div className="relative">
                 <input type={showPass ? 'text' : 'password'} value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="••••••••" required autoComplete="current-password"
-                  className="w-full bg-white/10 border border-white/10 text-white placeholder-slate-500 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none pr-20" />
+                  className="w-full bg-white/10 border border-white/10 text-white placeholder-grafite-500 rounded-xl p-3 text-sm focus:ring-2 focus:ring-grafite-700 focus:outline-none pr-20" />
                 <button type="button" onClick={() => setShowPass((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition text-xs font-bold">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-grafite-400 hover:text-white transition text-xs font-bold">
                   {showPass ? 'OCULTAR' : 'VER'}
                 </button>
               </div>
@@ -256,15 +256,15 @@ const LoginScreen = ({ onLogin, extraAdmins = [] }) => {
               </div>
             )}
             <button type="submit" disabled={loading}
-              className={`w-full py-3.5 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 ${loading ? 'bg-indigo-600/50 text-white/50 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30'}`}>
-              {loading ? <><span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full inline-block"></span> Entrando...</> : 'Entrar no Portal'}
+              className={`w-full py-3.5 rounded-lg font-semibold text-sm transition flex items-center justify-center gap-2 ${loading ? 'bg-marca/40 text-grafite-900/50 cursor-not-allowed' : 'bg-marca hover:bg-marca-600 text-grafite-950'}`}>
+              {loading ? <><span className="animate-spin w-4 h-4 border-2 border-grafite-900/30 border-t-grafite-900 rounded-full inline-block"></span> Entrando...</> : 'Entrar no Portal'}
             </button>
           </form>
-          <p className="text-center text-slate-500 text-xs mt-6">
-            Problemas de acesso? Contate <span className="text-slate-300 font-bold">luciene.batista@kalenborn.com.br</span>
+          <p className="text-center text-grafite-500 text-xs mt-6">
+            Problemas de acesso? Contate <span className="text-grafite-300 font-bold">luciene.batista@kalenborn.com.br</span>
           </p>
         </div>
-        <p className="text-center text-slate-600 text-[10px] mt-4 uppercase tracking-wider">
+        <p className="text-center text-grafite-600 text-[10px] mt-4 uppercase tracking-wider">
           Kalenborn do Brasil · SGA v2.0 · ISO 9001:2015
         </p>
       </div>
@@ -2176,13 +2176,13 @@ Gestão da Qualidade — Kalenborn do Brasil`
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-2">
         <div>
-          <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-[0.2em] mb-1">Sistema de Gestão de Auditoria · ISO 9001:2015</p>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Painel Executivo</h2>
-          <p className="text-slate-500 mt-1">Visão consolidada — {selectedBranch}</p>
+          <p className="text-[11px] font-bold text-grafite-900 uppercase tracking-[0.2em] mb-1">Sistema de Gestão de Auditoria · ISO 9001:2015</p>
+          <h2 className="text-[28px] leading-tight font-semibold tracking-tightish text-grafite-900 tracking-tight">Painel Executivo</h2>
+          <p className="text-grafite-500 mt-1">Visão consolidada — {selectedBranch}</p>
         </div>
         <button
           onClick={() => setActiveTab('checklist')}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-bold transition shadow-lg shadow-indigo-600/25 flex items-center gap-2 self-start"
+          className="bg-grafite-900 hover:bg-grafite-950 text-white px-5 py-3 rounded-xl font-bold transition shadow-lg shadow-grafite-900/25 flex items-center gap-2 self-start"
         >
           <Plus size={18} strokeWidth={2.5} /> Iniciar Nova Auditoria
         </button>
@@ -2192,82 +2192,82 @@ Gestão da Qualidade — Kalenborn do Brasil`
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <button
           onClick={() => setActiveTab('gestao')}
-          className="text-left bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer"
+          className="text-left bg-white p-6 rounded-2xl shadow-sm border border-grafite-100 relative overflow-hidden group hover:shadow-md hover:border-grafite-200 transition-all cursor-pointer"
         >
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-indigo-50 rounded-full group-hover:scale-110 transition-transform"></div>
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-papel rounded-full group-hover:scale-110 transition-transform"></div>
           <div className="relative flex justify-between items-start mb-5">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Auditorias no Ano</h3>
-            <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-md shadow-indigo-600/30"><ClipboardCheck size={18} /></div>
+            <h3 className="text-xs font-bold text-grafite-400 uppercase tracking-wider">Auditorias no Ano</h3>
+            <div className="p-2.5 bg-grafite-900 text-white rounded-xl shadow-md shadow-grafite-900/30"><ClipboardCheck size={18} /></div>
           </div>
-          <div className="relative text-4xl font-black text-slate-900 font-mono tabular-nums">{totalAuditsYear}</div>
-          <div className="relative text-xs text-slate-500 font-medium mt-2 flex items-center gap-1">
+          <div className="relative text-4xl font-semibold text-grafite-900 font-mono tabular-nums">{totalAuditsYear}</div>
+          <div className="relative text-xs text-grafite-500 font-medium mt-2 flex items-center gap-1">
             Registradas em {currentYear} <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition" />
           </div>
         </button>
 
         <button
           onClick={() => { setRncStatusFilter('Aberta'); setActiveTab('rnc'); }}
-          className="text-left bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-md hover:border-rose-200 transition-all cursor-pointer"
+          className={`text-left bg-white p-6 rounded-2xl shadow-sm border relative overflow-hidden group hover:shadow-md transition-all cursor-pointer ${totalOpenRncs > 0 ? 'border-rose-200 hover:border-rose-300' : 'border-grafite-100 hover:border-grafite-200'}`}
         >
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-rose-50 rounded-full group-hover:scale-110 transition-transform"></div>
+          <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full group-hover:scale-110 transition-transform ${totalOpenRncs > 0 ? 'bg-rose-50' : 'bg-grafite-50'}`}></div>
           <div className="relative flex justify-between items-start mb-5">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">RNCs Abertas</h3>
-            <div className="p-2.5 bg-rose-600 text-white rounded-xl shadow-md shadow-rose-600/30"><AlertTriangle size={18} /></div>
+            <h3 className="text-xs font-bold text-grafite-400 uppercase tracking-wider">RNCs Abertas</h3>
+            <div className={`p-2.5 rounded-xl ${totalOpenRncs > 0 ? 'bg-rose-600 text-white shadow-md shadow-rose-600/30' : 'bg-grafite-100 text-grafite-400'}`}><AlertTriangle size={18} /></div>
           </div>
-          <div className="relative text-4xl font-black text-slate-900 font-mono tabular-nums">{totalOpenRncs}</div>
-          <div className="relative text-xs font-medium mt-2 text-rose-600 flex items-center gap-1">
+          <div className="relative text-4xl font-semibold text-grafite-900 font-mono tabular-nums">{totalOpenRncs}</div>
+          <div className={`relative text-xs font-medium mt-2 flex items-center gap-1 ${totalOpenRncs > 0 ? 'text-rose-600' : 'text-grafite-500'}`}>
             {totalOpenRncs > 0 ? 'Requer atenção imediata' : 'Nenhuma pendência'} <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition" />
           </div>
         </button>
 
         <button
           onClick={() => { setRncStatusFilter('Todas'); setActiveTab('rnc'); }}
-          className="text-left bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-md hover:border-violet-200 transition-all cursor-pointer"
+          className="text-left bg-white p-6 rounded-2xl shadow-sm border border-grafite-100 relative overflow-hidden group hover:shadow-md hover:border-grafite-200 transition-all cursor-pointer"
         >
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-violet-50 rounded-full group-hover:scale-110 transition-transform"></div>
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-grafite-50 rounded-full group-hover:scale-110 transition-transform"></div>
           <div className="relative flex justify-between items-start mb-5">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Eficácia de Ações</h3>
-            <div className="p-2.5 bg-violet-600 text-white rounded-xl shadow-md shadow-violet-600/30"><Gauge size={18} /></div>
+            <h3 className="text-xs font-bold text-grafite-400 uppercase tracking-wider">Eficácia de Ações</h3>
+            <div className="p-2.5 bg-grafite-900 text-white rounded-xl shadow-md shadow-grafite-900/30"><Gauge size={18} /></div>
           </div>
-          <div className="relative text-4xl font-black text-slate-900 font-mono tabular-nums">
+          <div className="relative text-4xl font-semibold text-grafite-900 font-mono tabular-nums">
             {effectivenessIndex !== null ? `${effectivenessIndex}%` : '—'}
           </div>
-          <div className="relative text-xs text-slate-500 font-medium mt-2 flex items-center gap-1">
+          <div className="relative text-xs text-grafite-500 font-medium mt-2 flex items-center gap-1">
             {effectivenessIndex !== null ? 'Ações validadas e fechadas' : 'Ainda sem ações avaliadas'} <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition" />
           </div>
         </button>
       </div>
 
       {/* Histórico geral — agrega TODAS as auditorias já concluídas (não só a atual) */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-grafite-100 p-6">
         <div className="flex justify-between items-center mb-5">
           <div>
-            <h3 className="text-base font-bold text-slate-800">Histórico Geral de Conformidade</h3>
-            <p className="text-slate-500 text-xs mt-0.5">Somatório de todos os itens de checklist de todas as auditorias já concluídas</p>
+            <h3 className="text-base font-bold text-grafite-800">Histórico Geral de Conformidade</h3>
+            <p className="text-grafite-500 text-xs mt-0.5">Somatório de todos os itens de checklist de todas as auditorias já concluídas</p>
           </div>
-          <button onClick={() => setActiveTab('gestao')} className="text-xs text-indigo-600 font-bold hover:underline shrink-0">Ver Histórico Completo</button>
+          <button onClick={() => setActiveTab('gestao')} className="text-xs text-grafite-900 font-bold hover:underline shrink-0">Ver Histórico Completo</button>
         </div>
         {historicalStats.total === 0 ? (
-          <div className="p-6 text-center text-slate-400 text-sm font-medium">Nenhum item de checklist concluído ainda.</div>
+          <div className="p-6 text-center text-grafite-400 text-sm font-medium">Nenhum item de checklist concluído ainda.</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { key: 'c', label: 'Conforme',     count: historicalStats.c,   classes: {
                   card: 'rounded-xl border border-emerald-100 bg-emerald-50/50 p-5 text-left w-full hover:border-emerald-300 hover:shadow-sm transition cursor-pointer',
-                  count: 'text-3xl font-black font-mono text-emerald-600',
-                  pct: 'text-lg font-black font-mono text-emerald-500',
+                  count: 'text-[28px] leading-tight font-semibold tracking-tightish font-mono text-emerald-600',
+                  pct: 'text-lg font-semibold font-mono text-emerald-500',
                   bar: 'h-full bg-emerald-500 rounded-full transition-all'
               } },
               { key: 'nc', label: 'Não Conforme', count: historicalStats.nc,  classes: {
                   card: 'rounded-xl border border-rose-100 bg-rose-50/50 p-5 text-left w-full hover:border-rose-300 hover:shadow-sm transition cursor-pointer',
-                  count: 'text-3xl font-black font-mono text-rose-600',
-                  pct: 'text-lg font-black font-mono text-rose-500',
+                  count: 'text-[28px] leading-tight font-semibold tracking-tightish font-mono text-rose-600',
+                  pct: 'text-lg font-semibold font-mono text-rose-500',
                   bar: 'h-full bg-rose-500 rounded-full transition-all'
               } },
               { key: 'obs', label: 'Observação',   count: historicalStats.obs, classes: {
                   card: 'rounded-xl border border-amber-100 bg-amber-50/50 p-5 text-left w-full hover:border-amber-300 hover:shadow-sm transition cursor-pointer',
-                  count: 'text-3xl font-black font-mono text-amber-600',
-                  pct: 'text-lg font-black font-mono text-amber-500',
+                  count: 'text-[28px] leading-tight font-semibold tracking-tightish font-mono text-amber-600',
+                  pct: 'text-lg font-semibold font-mono text-amber-500',
                   bar: 'h-full bg-amber-500 rounded-full transition-all'
               } },
             ].map(({ key, label, count, classes }) => {
@@ -2278,10 +2278,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
                     <span className={classes.count}>{count}</span>
                     <span className={classes.pct}>{pct}%</span>
                   </div>
-                  <div className="text-[11px] uppercase font-bold tracking-wider text-slate-500 mb-2">
-                    {label} <span className="text-slate-300 font-normal normal-case">— ver por setor</span>
+                  <div className="text-[11px] uppercase font-bold tracking-wider text-grafite-500 mb-2">
+                    {label} <span className="text-grafite-300 font-normal normal-case">— ver por setor</span>
                   </div>
-                  <div className="w-full bg-white rounded-full h-1.5 border border-slate-100 overflow-hidden">
+                  <div className="w-full bg-white rounded-full h-1.5 border border-grafite-100 overflow-hidden">
                     <div className={classes.bar} style={{ width: `${pct}%` }} />
                   </div>
                 </button>
@@ -2289,7 +2289,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
             })}
           </div>
         )}
-        <div className="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 font-medium">
+        <div className="mt-4 pt-4 border-t border-grafite-100 text-xs text-grafite-500 font-medium">
           {historicalStats.total} itens avaliados no total
           {historicalStats.naoAvaliado > 0 && ` · ${historicalStats.naoAvaliado} sem avaliação registrada`}
         </div>
@@ -2297,53 +2297,53 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Status do checklist em andamento */}
-        <div className="bg-slate-900 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden lg:col-span-1">
-          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-600/20 rounded-full"></div>
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 relative">Auditoria em Andamento</h3>
+        <div className="bg-grafite-900 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden lg:col-span-1">
+          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-grafite-900/20 rounded-full"></div>
+          <h3 className="text-xs font-bold text-grafite-400 uppercase tracking-wider mb-4 relative">Auditoria em Andamento</h3>
           <div className="relative">
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-3xl font-black font-mono">{getProgressPct()}%</span>
-              <span className="text-sm text-slate-400 font-medium">concluído</span>
+              <span className="text-[28px] leading-tight font-semibold tracking-tightish font-mono">{getProgressPct()}%</span>
+              <span className="text-sm text-grafite-400 font-medium">concluído</span>
             </div>
-            <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden mb-5">
-              <div className="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-full transition-all" style={{ width: `${getProgressPct()}%` }}></div>
+            <div className="w-full h-2 bg-grafite-700 rounded-full overflow-hidden mb-5">
+              <div className="h-full bg-gradient-to-r from-grafite-700 to-grafite-400 rounded-full transition-all" style={{ width: `${getProgressPct()}%` }}></div>
             </div>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
-                <div className="text-xl font-black text-emerald-400 font-mono">{getCCount()}</div>
-                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mt-0.5">Conforme</div>
+                <div className="text-xl font-semibold text-emerald-400 font-mono">{getCCount()}</div>
+                <div className="text-[10px] text-grafite-400 uppercase font-bold tracking-wider mt-0.5">Conforme</div>
               </div>
               <div>
-                <div className="text-xl font-black text-rose-400 font-mono">{getNcCount()}</div>
-                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mt-0.5">Não Conf.</div>
+                <div className="text-xl font-semibold text-rose-400 font-mono">{getNcCount()}</div>
+                <div className="text-[10px] text-grafite-400 uppercase font-bold tracking-wider mt-0.5">Não Conf.</div>
               </div>
               <div>
-                <div className="text-xl font-black text-amber-400 font-mono">{getObsCount()}</div>
-                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mt-0.5">Observação</div>
+                <div className="text-xl font-semibold text-amber-400 font-mono">{getObsCount()}</div>
+                <div className="text-[10px] text-grafite-400 uppercase font-bold tracking-wider mt-0.5">Observação</div>
               </div>
             </div>
-            <button onClick={() => setActiveTab('checklist')} className="mt-5 w-full bg-white/10 hover:bg-white/20 text-white text-sm font-bold py-2.5 rounded-lg transition flex items-center justify-center gap-2">
+            <button onClick={() => setActiveTab('checklist')} className="mt-5 w-full bg-marca hover:bg-marca-600 text-grafite-950 text-sm font-semibold py-2.5 rounded-lg transition flex items-center justify-center gap-2">
               Continuar Checklist <ChevronDown size={14} className="-rotate-90" />
             </button>
           </div>
         </div>
 
         {/* Recents Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden lg:col-span-2">
-          <div className="p-5 border-b border-slate-100 flex justify-between items-center">
-            <h3 className="text-base font-bold text-slate-800">Últimas Auditorias Concluídas</h3>
+        <div className="bg-white rounded-2xl shadow-sm border border-grafite-100 overflow-hidden lg:col-span-2">
+          <div className="p-5 border-b border-grafite-100 flex justify-between items-center">
+            <h3 className="text-base font-bold text-grafite-800">Últimas Auditorias Concluídas</h3>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-slate-400 font-medium">{savedAudits.length} no total</span>
-              <button onClick={() => setActiveTab('gestao')} className="text-xs text-indigo-600 font-bold hover:underline">Ver Histórico Completo</button>
+              <span className="text-xs text-grafite-400 font-medium">{savedAudits.length} no total</span>
+              <button onClick={() => setActiveTab('gestao')} className="text-xs text-grafite-900 font-bold hover:underline">Ver Histórico Completo</button>
             </div>
           </div>
           {savedAudits.length === 0 ? (
-            <div className="p-10 text-center text-slate-400 text-sm font-medium">Nenhuma auditoria concluída ainda.</div>
+            <div className="p-10 text-center text-grafite-400 text-sm font-medium">Nenhuma auditoria concluída ainda.</div>
           ) : (
             <div className="overflow-x-auto overflow-y-auto max-h-[420px]">
               <table className="w-full text-left border-collapse font-sans text-sm min-w-[560px]">
                 <thead className="sticky top-0 z-10">
-                  <tr className="bg-slate-50 text-slate-400 text-[11px] uppercase tracking-wider">
+                  <tr className="bg-papel text-grafite-400 text-[11px] uppercase tracking-wider">
                     <th className="p-4 font-bold">Nº RAI</th>
                     <th className="p-4 font-bold">Data</th>
                     <th className="p-4 font-bold">Setor</th>
@@ -2351,21 +2351,21 @@ Gestão da Qualidade — Kalenborn do Brasil`
                     <th className="p-4 font-bold text-center">NCs</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-grafite-100">
                   {savedAudits.map((audit) => (
                     <tr
                       key={audit.id}
                       onClick={() => loadAudit(audit)}
-                      className="hover:bg-indigo-50/60 transition-colors cursor-pointer"
+                      className="hover:bg-papel/60 transition-colors cursor-pointer"
                     >
-                      <td className="p-4 font-bold text-slate-800 font-mono whitespace-nowrap">{audit.raiNumber}</td>
-                      <td className="p-4 text-slate-500 whitespace-nowrap">{audit.date}</td>
+                      <td className="p-4 font-bold text-grafite-800 font-mono whitespace-nowrap">{audit.raiNumber}</td>
+                      <td className="p-4 text-grafite-500 whitespace-nowrap">{audit.date}</td>
                       <td className="p-4 font-semibold">
-                        <SetorComTooltip setor={audit.sector} className="text-slate-700" />
+                        <SetorComTooltip setor={audit.sector} className="text-grafite-700" />
                       </td>
-                      <td className="p-4 text-slate-500">{audit.auditor}</td>
+                      <td className="p-4 text-grafite-500">{audit.auditor}</td>
                       <td className="p-4 text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-black ${audit.ncCount > 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${audit.ncCount > 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
                           {audit.ncCount}
                         </span>
                       </td>
@@ -2379,36 +2379,36 @@ Gestão da Qualidade — Kalenborn do Brasil`
       </div>
 
       {/* Próximas auditorias programadas (vindas do Calendário) */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex justify-between items-center">
-          <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-            <CalendarDays size={18} className="text-indigo-600" /> Próximas Auditorias Programadas
+      <div className="bg-white rounded-2xl shadow-sm border border-grafite-100 overflow-hidden">
+        <div className="p-5 border-b border-grafite-100 flex justify-between items-center">
+          <h3 className="text-base font-bold text-grafite-800 flex items-center gap-2">
+            <CalendarDays size={18} className="text-grafite-900" /> Próximas Auditorias Programadas
           </h3>
-          <button onClick={() => setActiveTab('calendario')} className="text-xs text-indigo-600 font-bold hover:underline">Abrir Calendário</button>
+          <button onClick={() => setActiveTab('calendario')} className="text-xs text-grafite-900 font-bold hover:underline">Abrir Calendário</button>
         </div>
         {upcomingEvents.length === 0 ? (
-          <div className="p-10 text-center text-slate-400 text-sm font-medium">
+          <div className="p-10 text-center text-grafite-400 text-sm font-medium">
             Nenhuma auditoria programada. Use o Calendário para agendar.
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-grafite-100">
             {upcomingEvents.slice(0, 4).map((ev) => {
               const evDate = dateKeyToDate(ev.dateKey);
               return (
                 <button
                   key={ev.id}
                   onClick={() => { handleSectorChange(ev.sector); setActiveTab('checklist'); }}
-                  className="w-full flex items-center gap-4 p-4 hover:bg-indigo-50/40 transition-colors text-left"
+                  className="w-full flex items-center gap-4 p-4 hover:bg-papel/40 transition-colors text-left"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-700 flex flex-col items-center justify-center shrink-0 border border-indigo-100">
+                  <div className="w-12 h-12 rounded-xl bg-papel text-grafite-950 flex flex-col items-center justify-center shrink-0 border border-grafite-100">
                     <span className="text-[10px] font-bold uppercase leading-none">{MONTH_LABELS[evDate.getMonth()].slice(0, 3)}</span>
-                    <span className="text-lg font-black leading-none">{evDate.getDate()}</span>
+                    <span className="text-lg font-semibold leading-none">{evDate.getDate()}</span>
                   </div>
                   <div className="flex-1">
-                    <p className="font-bold text-slate-800 text-sm">{ev.sector}</p>
-                    <p className="text-xs text-slate-500">{formatTimeRange(ev.time, ev.durationMin)} · {ev.auditor}</p>
+                    <p className="font-bold text-grafite-800 text-sm">{ev.sector}</p>
+                    <p className="text-xs text-grafite-500">{formatTimeRange(ev.time, ev.durationMin)} · {ev.auditor}</p>
                   </div>
-                  <ChevronRight size={16} className="text-slate-300" />
+                  <ChevronRight size={16} className="text-grafite-300" />
                 </button>
               );
             })}
@@ -2445,8 +2445,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
   }, [confirmAction, showNovaAuditoria, docDraft, eventDraft, showAdminPanel]);
 
   const renderCarregandoAuditoria = () => (
-    <div className="flex flex-col items-center justify-center py-24 text-slate-400 animate-fade-in">
-      <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+    <div className="flex flex-col items-center justify-center py-24 text-grafite-400 animate-fade-in">
+      <div className="w-10 h-10 border-4 border-grafite-200 border-t-grafite-900 rounded-full animate-spin mb-4"></div>
       <p className="text-sm font-bold">Carregando auditoria…</p>
     </div>
   );
@@ -2457,13 +2457,13 @@ Gestão da Qualidade — Kalenborn do Brasil`
     const s = statsPorSetor[setor];
     return (
       <span className="relative inline-block group/setor">
-        <span className={`cursor-help underline decoration-dotted decoration-slate-300 underline-offset-2 ${className || ''}`}>
+        <span className={`cursor-help underline decoration-dotted decoration-grafite-300 underline-offset-2 ${className || ''}`}>
           {setor}
         </span>
-        <div className="invisible opacity-0 group-hover/setor:visible group-hover/setor:opacity-100 transition-opacity duration-150 absolute z-50 left-0 top-full mt-2 w-64 bg-slate-900 text-white rounded-xl shadow-2xl p-4 pointer-events-none">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{setor}</p>
+        <div className="invisible opacity-0 group-hover/setor:visible group-hover/setor:opacity-100 transition-opacity duration-150 absolute z-50 left-0 top-full mt-2 w-64 bg-grafite-900 text-white rounded-xl shadow-2xl p-4 pointer-events-none">
+          <p className="text-[10px] font-bold text-grafite-400 uppercase tracking-wider mb-2">{setor}</p>
           {!s || s.total === 0 ? (
-            <p className="text-xs text-slate-300">Nenhum item avaliado ainda.</p>
+            <p className="text-xs text-grafite-300">Nenhum item avaliado ainda.</p>
           ) : (
             <>
               <div className="space-y-1.5">
@@ -2473,34 +2473,34 @@ Gestão da Qualidade — Kalenborn do Brasil`
                   { label: 'Observação',    count: s.obs, color: 'text-amber-400' },
                 ].map(({ label, count, color }) => (
                   <div key={label} className="flex items-center justify-between text-xs">
-                    <span className="text-slate-300">{label}</span>
-                    <span className={`font-black font-mono ${color}`}>{count} ({Math.round((count / s.total) * 1000) / 10}%)</span>
+                    <span className="text-grafite-300">{label}</span>
+                    <span className={`font-semibold font-mono ${color}`}>{count} ({Math.round((count / s.total) * 1000) / 10}%)</span>
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] text-slate-400 mt-2.5 pt-2 border-t border-white/10">{s.total} itens no total, todas as auditorias</p>
+              <p className="text-[10px] text-grafite-400 mt-2.5 pt-2 border-t border-white/10">{s.total} itens no total, todas as auditorias</p>
             </>
           )}
           {/* Setinha do balão */}
-          <div className="absolute -top-1.5 left-4 w-3 h-3 bg-slate-900 rotate-45"></div>
+          <div className="absolute -top-1.5 left-4 w-3 h-3 bg-grafite-900 rotate-45"></div>
         </div>
       </span>
     );
   };
 
   const renderMinhasAuditorias = () => (
-    <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50 min-h-full">
+    <div className="flex-1 overflow-y-auto p-6 md:p-8 min-h-full">
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-black text-slate-900">Minhas Auditorias</h2>
-            <p className="text-slate-500 text-sm mt-1">Cada auditoria é independente — o setor fica travado após criar.</p>
+            <h2 className="text-[22px] leading-snug font-semibold tracking-tightish text-grafite-900">Minhas Auditorias</h2>
+            <p className="text-grafite-500 text-sm mt-1">Cada auditoria é independente — o setor fica travado após criar.</p>
           </div>
           <button
             onClick={() => setShowNovaAuditoria(true)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition text-sm shadow-lg shadow-indigo-600/25"
+            className="flex items-center gap-2 bg-grafite-900 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-grafite-950 transition text-sm shadow-lg shadow-grafite-900/25"
           >
             <Plus size={16} /> Nova Auditoria
           </button>
@@ -2512,12 +2512,12 @@ Gestão da Qualidade — Kalenborn do Brasil`
                onClick={() => setShowNovaAuditoria(false)}>
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4"
                  onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-black text-slate-900">Nova Auditoria</h3>
-              <p className="text-sm text-slate-500">Selecione o setor. <strong>Não será possível trocar depois.</strong></p>
+              <h3 className="text-lg font-semibold text-grafite-900">Nova Auditoria</h3>
+              <p className="text-sm text-grafite-500">Selecione o setor. <strong>Não será possível trocar depois.</strong></p>
               <select
                 value={novoSetor}
                 onChange={e => setNovoSetor(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="w-full border border-grafite-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-grafite-700 focus:outline-none"
               >
                 <option value="">-- Selecione o setor --</option>
                 {SETORES_LISTA.map(s => <option key={s} value={s}>{s}</option>)}
@@ -2525,7 +2525,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
               <div className="flex gap-3">
                 <button
                   onClick={() => { setShowNovaAuditoria(false); setNovoSetor(''); }}
-                  className="flex-1 border border-slate-200 text-slate-600 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition text-sm"
+                  className="flex-1 border border-grafite-200 text-grafite-600 py-2.5 rounded-xl font-bold hover:bg-papel transition text-sm"
                 >
                   Cancelar
                 </button>
@@ -2537,7 +2537,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                     setNovoSetor('');
                   }}
                   disabled={!novoSetor}
-                  className={`flex-1 py-2.5 rounded-xl font-bold transition text-sm ${novoSetor ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+                  className={`flex-1 py-2.5 rounded-xl font-bold transition text-sm ${novoSetor ? 'bg-grafite-900 text-white hover:bg-grafite-950' : 'bg-grafite-100 text-grafite-400 cursor-not-allowed'}`}
                 >
                   Criar Auditoria
                 </button>
@@ -2548,12 +2548,12 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
         {/* Lista de auditorias em andamento (rascunhos) */}
         <div>
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">Em andamento</h3>
+          <h3 className="text-xs font-semibold text-grafite-400 uppercase tracking-wider mb-3">Em andamento</h3>
           {auditorias.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-              <ClipboardCheck size={40} className="mx-auto text-slate-300 mb-3" />
-              <p className="text-slate-500 font-medium">Nenhuma auditoria em andamento.</p>
-              <p className="text-slate-400 text-sm mt-1">Clique em "Nova Auditoria" para começar.</p>
+            <div className="bg-white rounded-2xl border border-grafite-200 p-12 text-center">
+              <ClipboardCheck size={40} className="mx-auto text-grafite-300 mb-3" />
+              <p className="text-grafite-500 font-medium">Nenhuma auditoria em andamento.</p>
+              <p className="text-grafite-400 text-sm mt-1">Clique em "Nova Auditoria" para começar.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -2565,29 +2565,29 @@ Gestão da Qualidade — Kalenborn do Brasil`
                 const isAtiva     = aud.localId === auditoriaAtivaId;
 
                 return (
-                  <div key={aud.localId} className={`bg-white rounded-2xl border-2 p-5 transition ${isAtiva ? 'border-indigo-400 shadow-lg shadow-indigo-100' : 'border-slate-200 hover:border-slate-300'}`}>
+                  <div key={aud.localId} className={`bg-white rounded-2xl border-2 p-5 transition ${isAtiva ? 'border-grafite-400 shadow-lg shadow-grafite-100' : 'border-grafite-200 hover:border-grafite-300'}`}>
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Rascunho</span>
-                          <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{aud.raiNumber}</span>
+                          <span className="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Rascunho</span>
+                          <span className="text-xs font-bold text-grafite-900 bg-papel px-2 py-0.5 rounded-full">{aud.raiNumber}</span>
                           {ncs > 0 && <span className="text-xs font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">{ncs} NC{ncs > 1 ? 's' : ''}</span>}
                         </div>
-                        <h3 className="font-black text-slate-900">{aud.setor}</h3>
+                        <h3 className="font-semibold text-grafite-900">{aud.setor}</h3>
                         <div className="mt-2">
-                          <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                          <div className="flex items-center justify-between text-xs text-grafite-500 mb-1">
                             <span>Progresso do checklist</span>
                             <span>{respondidos}/{total} ({pct}%)</span>
                           </div>
-                          <div className="w-full bg-slate-100 rounded-full h-1.5">
-                            <div className="bg-indigo-500 h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                          <div className="w-full bg-grafite-100 rounded-full h-1.5">
+                            <div className="bg-grafite-700 h-1.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
                           </div>
                         </div>
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => { setAuditoriaAtivaId(aud.localId); setActiveTab('checklist'); }}
-                          className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition"
+                          className="bg-grafite-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-grafite-950 transition"
                         >
                           {isAtiva ? 'Continuar' : 'Abrir'}
                         </button>
@@ -2614,32 +2614,32 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
         {/* Lista de auditorias já concluídas */}
         <div>
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3 mt-6">Concluídas</h3>
+          <h3 className="text-xs font-semibold text-grafite-400 uppercase tracking-wider mb-3 mt-6">Concluídas</h3>
           {savedAudits.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-              <FileText size={40} className="mx-auto text-slate-300 mb-3" />
-              <p className="text-slate-500 font-medium">Nenhuma auditoria concluída ainda.</p>
+            <div className="bg-white rounded-2xl border border-grafite-200 p-12 text-center">
+              <FileText size={40} className="mx-auto text-grafite-300 mb-3" />
+              <p className="text-grafite-500 font-medium">Nenhuma auditoria concluída ainda.</p>
             </div>
           ) : (
             <div className="space-y-3">
               {savedAudits.map(audit => (
-                <div key={audit.id} className="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 p-5 transition">
+                <div key={audit.id} className="bg-white rounded-2xl border-2 border-grafite-200 hover:border-grafite-300 p-5 transition">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-800 text-white">Concluída</span>
-                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{audit.raiNumber}</span>
+                        <span className="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-grafite-800 text-white">Concluída</span>
+                        <span className="text-xs font-bold text-grafite-900 bg-papel px-2 py-0.5 rounded-full">{audit.raiNumber}</span>
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${audit.ncCount > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
                           {audit.ncCount} NC{audit.ncCount !== 1 ? 's' : ''}
                         </span>
                       </div>
-                      <SetorComTooltip setor={audit.sector} className="font-black text-slate-900 text-base" />
-                      <p className="text-xs text-slate-500 mt-1">{audit.date} · Auditor: {audit.auditor} · {audit.branch}</p>
+                      <SetorComTooltip setor={audit.sector} className="font-semibold text-grafite-900 text-base" />
+                      <p className="text-xs text-grafite-500 mt-1">{audit.date} · Auditor: {audit.auditor} · {audit.branch}</p>
                     </div>
                     <button
                       onClick={() => loadAudit(audit)}
                       disabled={loadingAuditId === audit.id}
-                      className="bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-600 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm disabled:opacity-50 disabled:cursor-wait shrink-0"
+                      className="bg-white text-grafite-900 border border-grafite-200 hover:bg-grafite-900 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm disabled:opacity-50 disabled:cursor-wait shrink-0"
                     >
                       {loadingAuditId === audit.id ? '...' : 'VER'}
                     </button>
@@ -2657,15 +2657,15 @@ Gestão da Qualidade — Kalenborn do Brasil`
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+          <h2 className="text-[22px] leading-snug font-semibold tracking-tightish text-grafite-900 flex items-center gap-3">
             Lista de Verificação
-            <span className={`text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full ${
-              isChecklistLocked ? 'bg-slate-800 text-white' : 'bg-emerald-100 text-emerald-700'
+            <span className={`text-[11px] font-semibold uppercase tracking-wider px-3 py-1 rounded-full ${
+              isChecklistLocked ? 'bg-grafite-800 text-white' : 'bg-emerald-100 text-emerald-700'
             }`}>
               {isChecklistLocked ? 'Fechado' : 'Em Andamento'}
             </span>
           </h2>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-grafite-500 text-sm mt-1">
             {getAnsweredCount()} de {checklist.length} itens avaliados · {selectedSector}
             {isChecklistLocked && checklistClosedAt && (
               <> · Fechado em {new Date(checklistClosedAt).toLocaleDateString('pt-BR')} às {new Date(checklistClosedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</>
@@ -2673,10 +2673,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
           </p>
         </div>
         <div className="flex gap-3 flex-wrap">
-          <button onClick={exportChecklistExcel} className="flex items-center gap-2 bg-white border border-slate-200 text-emerald-700 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition text-sm shadow-sm">
+          <button onClick={exportChecklistExcel} className="flex items-center gap-2 bg-white border border-grafite-200 text-emerald-700 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition text-sm shadow-sm">
             <FileSpreadsheet size={16} /> Exportar Excel
           </button>
-          <button onClick={printDocument} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition text-sm shadow-sm">
+          <button onClick={printDocument} className="flex items-center gap-2 bg-white border border-grafite-200 text-grafite-700 px-4 py-2.5 rounded-xl font-bold hover:bg-papel transition text-sm shadow-sm">
             <Printer size={16} /> Imprimir / PDF
           </button>
           {!isChecklistLocked && (
@@ -2703,12 +2703,12 @@ Gestão da Qualidade — Kalenborn do Brasil`
               // era a segunda forma de duplicar auditorias: o checklist parecia
               // editável, mas o salvamento não tinha pra onde ir e acabava criando
               // uma auditoria nova em vez de atualizar a existente.
-              <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-400 print:hidden">
+              <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-grafite-100 text-grafite-400 print:hidden">
                 <ShieldCheck size={16} /> Somente visualização
               </span>
             )
           ) : (
-            <button onClick={requestCloseChecklist} className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-slate-900 transition text-sm shadow-lg shadow-slate-800/25">
+            <button onClick={requestCloseChecklist} className="flex items-center gap-2 bg-grafite-800 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-grafite-900 transition text-sm shadow-lg shadow-grafite-800/25">
               <CheckCircle size={16} /> Fechar Checklist
             </button>
           )}
@@ -2716,8 +2716,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
       </div>
 
       {isChecklistLocked && (
-        <div className="bg-slate-50 border border-slate-200 text-slate-600 rounded-xl p-4 flex items-start gap-3 text-sm max-w-[1000px] mx-auto print:hidden">
-          <ShieldCheck size={18} className="mt-0.5 shrink-0 text-slate-400" />
+        <div className="bg-papel border border-grafite-200 text-grafite-600 rounded-xl p-4 flex items-start gap-3 text-sm max-w-[1000px] mx-auto print:hidden">
+          <ShieldCheck size={18} className="mt-0.5 shrink-0 text-grafite-400" />
           <div>
             Este checklist está <span className="font-bold">fechado</span> e não pode ser editado. Use "Reabrir Checklist" se precisar corrigir algo —
             a reabertura fica registrada abaixo para rastreabilidade.
@@ -2832,7 +2832,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
               const ncSemEvidencia = item.status === 'NC' && !item.comments.trim();
               return (
               <tr key={item.id} className={`hover:bg-blue-50 transition-colors group ${ncSemEvidencia ? 'bg-rose-50/60' : ''}`}>
-                <td className="p-3 text-center text-black font-bold border-r-2 border-black align-top bg-gray-50 group-hover:bg-blue-100">{idx + 1}</td>
+                <td className="p-3 text-center text-black font-bold border-r-2 border-black align-top bg-papel group-hover:bg-blue-100">{idx + 1}</td>
                 <td className="p-3 text-sm text-black border-r-2 border-black align-top font-medium">
                   <textarea
                     rows="2"
@@ -2893,7 +2893,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                         onConfirm: () => handleRemoveChecklistItem(item.id)
                       })}
                       aria-label="Remover item"
-                      className="text-slate-300 hover:text-rose-600 transition"
+                      className="text-grafite-300 hover:text-rose-600 transition"
                     >
                       <Trash2 size={15} />
                     </button>
@@ -2906,10 +2906,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
         </table>
 
         {!isChecklistLocked && (
-          <div className="p-3 bg-gray-50 border-t-2 border-black print:hidden">
+          <div className="p-3 bg-papel border-t-2 border-black print:hidden">
             <button
               onClick={handleAddChecklistItem}
-              className="flex items-center gap-2 text-indigo-600 font-bold text-sm hover:text-indigo-800 transition"
+              className="flex items-center gap-2 text-grafite-900 font-bold text-sm hover:text-grafite-800 transition"
             >
               <ListPlus size={16} /> Adicionar item ao checklist
             </button>
@@ -2926,21 +2926,21 @@ Gestão da Qualidade — Kalenborn do Brasil`
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-900">Emissão de Relatório Final</h2>
-          <p className="text-slate-500 text-sm mt-1 flex items-center gap-2">
-            RAI Nº <span className="font-mono font-bold text-indigo-600">{report.raiNumber}</span>
-            <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
-              isChecklistLocked ? 'bg-slate-800 text-white' : 'bg-emerald-100 text-emerald-700'
+          <h2 className="text-[22px] leading-snug font-semibold tracking-tightish text-grafite-900">Emissão de Relatório Final</h2>
+          <p className="text-grafite-500 text-sm mt-1 flex items-center gap-2">
+            RAI Nº <span className="font-mono font-bold text-grafite-900">{report.raiNumber}</span>
+            <span className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+              isChecklistLocked ? 'bg-grafite-800 text-white' : 'bg-emerald-100 text-emerald-700'
             }`}>
               Checklist {isChecklistLocked ? 'Fechado' : 'Em Andamento'}
             </span>
           </p>
         </div>
         <div className="flex gap-3 flex-wrap">
-          <button onClick={exportReportExcel} className="flex items-center gap-2 bg-white border border-slate-200 text-emerald-700 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition text-sm shadow-sm">
+          <button onClick={exportReportExcel} className="flex items-center gap-2 bg-white border border-grafite-200 text-emerald-700 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition text-sm shadow-sm">
             <FileSpreadsheet size={16} /> Exportar Excel
           </button>
-          <button onClick={printDocument} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition text-sm shadow-sm">
+          <button onClick={printDocument} className="flex items-center gap-2 bg-white border border-grafite-200 text-grafite-700 px-4 py-2.5 rounded-xl font-bold hover:bg-papel transition text-sm shadow-sm">
             <Printer size={16} /> Imprimir / PDF
           </button>
           {auditoriaAtivaId && (
@@ -2982,16 +2982,16 @@ Gestão da Qualidade — Kalenborn do Brasil`
               }}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition text-sm shadow-lg ${
                 saveBlockers.length > 0
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                  ? 'bg-grafite-200 text-grafite-400 cursor-not-allowed shadow-none'
                   : editingAuditId
                     ? 'bg-amber-600 text-white hover:bg-amber-700 shadow-amber-600/25'
-                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-600/25'
+                    : 'bg-grafite-900 text-white hover:bg-grafite-950 shadow-grafite-900/25'
               }`}
             >
               <Save size={16} /> {editingAuditId ? 'Salvar Alterações' : 'Salvar no Histórico'}
             </button>
           ) : (
-            <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-400 print:hidden">
+            <span className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-grafite-100 text-grafite-400 print:hidden">
               <ShieldCheck size={16} /> Somente visualização
             </span>
           )}
@@ -3033,8 +3033,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <div className="w-1/4 p-2 flex flex-col items-center justify-center border-r-2 border-black bg-white">
             <KalenLogo variant="full" />
           </div>
-          <div className="w-1/2 p-4 flex items-center justify-center border-r-2 border-black bg-gray-50">
-            <h1 className="text-2xl font-black text-center uppercase tracking-wide text-gray-800">
+          <div className="w-1/2 p-4 flex items-center justify-center border-r-2 border-black bg-papel">
+            <h1 className="text-[22px] leading-snug font-semibold tracking-tightish text-center uppercase tracking-wide text-gray-800">
               Relatório de Auditoria Interna
             </h1>
           </div>
@@ -3112,11 +3112,11 @@ Gestão da Qualidade — Kalenborn do Brasil`
         </div>
 
         <div className="bg-gray-300 font-bold p-2 border-b-2 border-black text-center uppercase tracking-wider">Pessoas Auditadas (Entrevistados)</div>
-        <div className="flex border-b-2 border-black text-center bg-gray-50 font-bold">
+        <div className="flex border-b-2 border-black text-center bg-papel font-bold">
           <div className="w-1/2 p-2 border-r-2 border-black">Nome do Colaborador</div>
           <div className="w-1/2 p-2">Cargo / Função</div>
         </div>
-        <div className="flex border-b-2 border-black bg-white hover:bg-gray-50">
+        <div className="flex border-b-2 border-black bg-white hover:bg-papel">
           <div className="w-1/2 p-2 border-r-2 border-black">
             <input
               type="text"
@@ -3151,7 +3151,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
         <div className="flex border-b-2 border-black bg-yellow-50">
           <div className="w-3/4 p-3 border-r-2 border-black flex items-center font-bold text-red-800 uppercase">Quantidade de RNCs (Relatórios de Não Conformidade) exigidas para este processo:</div>
-          <div className="w-1/4 p-3 flex items-center justify-center font-black text-2xl text-red-600 bg-white">
+          <div className="w-1/4 p-3 flex items-center justify-center font-semibold text-2xl text-red-600 bg-white">
             {getNcCount()}
           </div>
         </div>
@@ -3162,7 +3162,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <div className="hidden print:block whitespace-pre-wrap text-center font-medium">{report.conclusion}</div>
         </div>
 
-        <div className="flex text-center bg-gray-50">
+        <div className="flex text-center bg-papel">
           <div className="w-1/2 p-6 border-r-2 border-black flex flex-col items-center justify-end">
             <div className="w-3/4 border-b border-black mb-2"></div>
             <div className="font-bold text-gray-800">Assinatura do Auditor Líder</div>
@@ -3193,14 +3193,14 @@ Gestão da Qualidade — Kalenborn do Brasil`
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-900">Tratativa de Não Conformidades (RNC)</h2>
-          <p className="text-slate-500 text-sm mt-1">{rncs.filter((r) => r.status === 'Aberta').length} aberta(s) · {rncs.length} no total</p>
+          <h2 className="text-[22px] leading-snug font-semibold tracking-tightish text-grafite-900">Tratativa de Não Conformidades (RNC)</h2>
+          <p className="text-grafite-500 text-sm mt-1">{rncs.filter((r) => r.status === 'Aberta').length} aberta(s) · {rncs.length} no total</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={exportRncExcel} className="flex items-center gap-2 bg-white border border-slate-200 text-emerald-700 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition text-sm shadow-sm">
+          <button onClick={exportRncExcel} className="flex items-center gap-2 bg-white border border-grafite-200 text-emerald-700 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition text-sm shadow-sm">
             <FileSpreadsheet size={16} /> Exportar Excel
           </button>
-          <button onClick={printDocument} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold hover:bg-slate-50 transition text-sm shadow-sm">
+          <button onClick={printDocument} className="flex items-center gap-2 bg-white border border-grafite-200 text-grafite-700 px-4 py-2.5 rounded-xl font-bold hover:bg-papel transition text-sm shadow-sm">
             <Printer size={16} /> Imprimir / PDF
           </button>
           <button
@@ -3218,8 +3218,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
             onClick={() => setRncScopeFilter('setor')}
             className={`px-4 py-1.5 rounded-full text-xs font-bold border transition ${
               rncScopeFilter === 'setor'
-                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                ? 'bg-grafite-900 text-white border-grafite-900 shadow-sm'
+                : 'bg-white text-grafite-500 border-grafite-200 hover:bg-papel'
             }`}
           >
             Desta auditoria ({selectedSector}) — {rncs.filter((r) => r.process === selectedSector).length}
@@ -3228,8 +3228,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
             onClick={() => setRncScopeFilter('todas')}
             className={`px-4 py-1.5 rounded-full text-xs font-bold border transition ${
               rncScopeFilter === 'todas'
-                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                ? 'bg-grafite-900 text-white border-grafite-900 shadow-sm'
+                : 'bg-white text-grafite-500 border-grafite-200 hover:bg-papel'
             }`}
           >
             Todos os setores ({rncs.length})
@@ -3244,8 +3244,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
             onClick={() => setRncStatusFilter(opt)}
             className={`px-4 py-1.5 rounded-full text-xs font-bold border transition ${
               rncStatusFilter === opt
-                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                ? 'bg-grafite-900 text-white border-grafite-900 shadow-sm'
+                : 'bg-white text-grafite-500 border-grafite-200 hover:bg-papel'
             }`}
           >
             {opt} {opt !== 'Todas' && `(${rncsDoEscopo.filter((r) => r.status === opt).length})`}
@@ -3254,13 +3254,13 @@ Gestão da Qualidade — Kalenborn do Brasil`
       </div>
 
       {rncs.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center text-slate-500 shadow-sm font-medium flex flex-col items-center justify-center">
-          <AlertTriangle size={48} className="text-slate-300 mb-4" />
+        <div className="bg-white border border-grafite-200 rounded-2xl p-16 text-center text-grafite-500 shadow-sm font-medium flex flex-col items-center justify-center">
+          <AlertTriangle size={48} className="text-grafite-300 mb-4" />
           Nenhuma RNC registrada. Use "Gerar Nova RNC" para abrir um novo relatório de ação corretiva.
         </div>
       ) : visibleRncs.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center text-slate-500 shadow-sm font-medium flex flex-col items-center justify-center">
-          <ShieldCheck size={48} className="text-slate-300 mb-4" />
+        <div className="bg-white border border-grafite-200 rounded-2xl p-16 text-center text-grafite-500 shadow-sm font-medium flex flex-col items-center justify-center">
+          <ShieldCheck size={48} className="text-grafite-300 mb-4" />
           Nenhuma RNC com status "{rncStatusFilter}"{rncScopeFilter === 'setor' && temAuditoriaAberta ? ` em ${selectedSector}` : ''}.
         </div>
       ) : visibleRncs.map((rnc) => (
@@ -3271,7 +3271,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
           }`}
         >
           <div className="absolute -top-4 -right-4 print:hidden flex items-center gap-2">
-            <span className={`px-4 py-1 text-xs font-black uppercase tracking-wider rounded-full shadow-lg border-2 ${rnc.status === 'Aberta' ? 'bg-amber-400 border-amber-600 text-amber-900' : 'bg-emerald-500 border-emerald-700 text-white'}`}>
+            <span className={`px-4 py-1 text-xs font-semibold uppercase tracking-wider rounded-full shadow-lg border-2 ${rnc.status === 'Aberta' ? 'bg-amber-400 border-amber-600 text-amber-900' : 'bg-emerald-500 border-emerald-700 text-white'}`}>
               Status: {rnc.status}
             </span>
           </div>
@@ -3286,7 +3286,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
             <button
               onClick={() => printSingleRnc(rnc.id)}
               title={`Imprimir/gerar PDF só da RNC ${rnc.id}`}
-              className="flex items-center gap-1.5 bg-white border-2 border-slate-700 text-slate-700 px-3 py-1 rounded-full text-xs font-bold shadow-md hover:bg-slate-50 transition"
+              className="flex items-center gap-1.5 bg-white border-2 border-grafite-700 text-grafite-700 px-3 py-1 rounded-full text-xs font-bold shadow-md hover:bg-papel transition"
             >
               <Printer size={13} /> Imprimir esta RNC
             </button>
@@ -3296,13 +3296,13 @@ Gestão da Qualidade — Kalenborn do Brasil`
             <div className="w-1/4 p-2 flex flex-col items-center justify-center border-r-2 border-black bg-white">
               <KalenLogo variant="full" />
             </div>
-            <div className="w-1/2 p-4 flex items-center justify-center border-r-2 border-black bg-gray-50">
-              <h1 className="text-xl font-black text-center uppercase tracking-wide text-gray-800">RELATÓRIO DE AÇÕES CORRETIVAS</h1>
+            <div className="w-1/2 p-4 flex items-center justify-center border-r-2 border-black bg-papel">
+              <h1 className="text-xl font-semibold text-center uppercase tracking-wide text-gray-800">RELATÓRIO DE AÇÕES CORRETIVAS</h1>
             </div>
             <div className="w-1/4 flex flex-col">
               <div className="flex flex-1 border-b-2 border-black">
                 <div className="w-1/2 border-r-2 border-black flex items-center justify-center font-bold bg-gray-200 text-xs">Nº R.A.C</div>
-                <div className="w-1/2 flex items-center justify-center font-black text-xl text-red-700 bg-red-50">{rnc.id}</div>
+                <div className="w-1/2 flex items-center justify-center font-semibold text-xl text-red-700 bg-red-50">{rnc.id}</div>
               </div>
               <div className="flex flex-1">
                 <div className="w-1/2 border-r-2 border-black flex items-center justify-center font-bold bg-gray-100 text-xs">DATA EMISSÃO:</div>
@@ -3312,7 +3312,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
           </div>
 
           {rnc.sourceChecklistItem && (
-            <div className="bg-indigo-50 border-b-2 border-black p-2.5 px-3 flex items-center gap-2 text-xs text-indigo-800 print:hidden">
+            <div className="bg-papel border-b-2 border-black p-2.5 px-3 flex items-center gap-2 text-xs text-grafite-800 print:hidden">
               <Link2 size={14} className="shrink-0" />
               <span>
                 Originada do checklist da auditoria <span className="font-bold">RAI {rnc.sourceRaiNumber}</span> — item:
@@ -3337,9 +3337,9 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
           <div className="bg-gray-300 font-bold p-1 px-3 border-b-2 border-black uppercase tracking-wider">Dados de Origem</div>
           <div className="flex border-b-2 border-black bg-white">
-            <div className="w-[15%] font-bold p-2 border-r-2 border-black flex items-center bg-gray-50">Processo:</div>
+            <div className="w-[15%] font-bold p-2 border-r-2 border-black flex items-center bg-papel">Processo:</div>
             <div className="w-[45%] p-2 border-r-2 border-black"><input type="text" className="w-full focus:outline-none uppercase font-bold text-blue-900" value={rnc.process} onChange={(e) => handleRncChange(rnc.id, 'process', e.target.value)} /></div>
-            <div className="w-[15%] font-bold p-2 border-r-2 border-black flex items-center bg-gray-50">Unidade:</div>
+            <div className="w-[15%] font-bold p-2 border-r-2 border-black flex items-center bg-papel">Unidade:</div>
             <div className="w-[25%] p-2"><input type="text" className="w-full focus:outline-none font-bold" value={selectedBranch} readOnly /></div>
           </div>
 
@@ -3397,7 +3397,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
           </div>
 
           <div className="bg-gray-300 font-bold p-2 border-b-2 border-black text-center uppercase tracking-wider">Análise Crítica da Eficácia das Ações (Validação SGQ)</div>
-          <div className="flex border-b-2 border-black bg-gray-50">
+          <div className="flex border-b-2 border-black bg-papel">
             <div className="w-1/2 border-r-2 border-black p-4 flex items-center justify-center gap-6">
               <span className="font-bold uppercase text-sm">Ação foi Eficaz?</span>
               <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="radio" className="w-4 h-4" name={`eficaz-${rnc.id}`} checked={rnc.effective === 'Sim'} onChange={() => handleRncChange(rnc.id, 'effective', 'Sim')} /> SIM</label>
@@ -3421,7 +3421,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
             </div>
           </div>
 
-          <div className="bg-slate-900 border-t-2 border-black p-4 flex justify-between items-center gap-3 print:hidden">
+          <div className="bg-grafite-900 border-t-2 border-black p-4 flex justify-between items-center gap-3 print:hidden">
             <button
               onClick={() => requestConfirm({
                 title: 'Excluir RNC',
@@ -3451,7 +3451,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                   onConfirm: () => handleRncChange(rnc.id, 'status', rnc.status === 'Aberta' ? 'Fechada' : 'Aberta')
                 });
               }}
-              className="bg-indigo-600 text-white font-bold px-8 py-3 rounded-xl flex items-center gap-2 hover:bg-indigo-500 transition shadow-lg"
+              className="bg-grafite-900 text-white font-semibold px-8 py-3 rounded-lg flex items-center gap-2 hover:bg-grafite-700 transition shadow-lg"
             >
               <Save size={20} /> {rnc.status === 'Aberta' ? 'Registrar Fechamento' : 'Reabrir RNC'}
             </button>
@@ -3466,13 +3466,13 @@ Gestão da Qualidade — Kalenborn do Brasil`
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-black text-slate-900">Repositório de Auditorias</h2>
-          <p className="text-slate-500 mt-1">Histórico consolidado das unidades de Minas Gerais</p>
+          <h2 className="text-[22px] leading-snug font-semibold tracking-tightish text-grafite-900">Repositório de Auditorias</h2>
+          <p className="text-grafite-500 mt-1">Histórico consolidado das unidades de Minas Gerais</p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-sm w-80 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
-            <Search className="text-slate-400 mr-2" size={20} />
+          <div className="flex bg-white border border-grafite-200 rounded-xl px-4 py-2.5 shadow-sm w-80 focus-within:ring-2 focus-within:ring-grafite-700 focus-within:border-grafite-700">
+            <Search className="text-grafite-400 mr-2" size={20} />
             <input
               type="text"
               placeholder="Buscar por Nº RAI, Setor ou Auditor..."
@@ -3482,7 +3482,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
             />
           </div>
           {savedAudits.length > 0 && (
-            <button onClick={exportHistoryExcel} className="flex items-center gap-2 bg-white border border-slate-200 text-emerald-700 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition text-sm shadow-sm whitespace-nowrap">
+            <button onClick={exportHistoryExcel} className="flex items-center gap-2 bg-white border border-grafite-200 text-emerald-700 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition text-sm shadow-sm whitespace-nowrap">
               <FileSpreadsheet size={16} /> Exportar Excel
             </button>
           )}
@@ -3500,8 +3500,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
             onClick={() => setHistoryNcFilter(opt.key)}
             className={`px-4 py-1.5 rounded-full text-xs font-bold border transition ${
               historyNcFilter === opt.key
-                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                ? 'bg-grafite-900 text-white border-grafite-900 shadow-sm'
+                : 'bg-white text-grafite-500 border-grafite-200 hover:bg-papel'
             }`}
           >
             {opt.label}
@@ -3510,20 +3510,20 @@ Gestão da Qualidade — Kalenborn do Brasil`
       </div>
 
       {savedAudits.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center text-slate-500 shadow-sm font-medium flex flex-col items-center justify-center">
-          <FolderTree size={48} className="text-slate-300 mb-4" />
+        <div className="bg-white border border-grafite-200 rounded-2xl p-16 text-center text-grafite-500 shadow-sm font-medium flex flex-col items-center justify-center">
+          <FolderTree size={48} className="text-grafite-300 mb-4" />
           Nenhum registro encontrado. Realize e salve uma auditoria para popular o painel.
         </div>
       ) : filteredAudits.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center text-slate-500 shadow-sm font-medium flex flex-col items-center justify-center">
-          <Search size={48} className="text-slate-300 mb-4" />
+        <div className="bg-white border border-grafite-200 rounded-2xl p-16 text-center text-grafite-500 shadow-sm font-medium flex flex-col items-center justify-center">
+          <Search size={48} className="text-grafite-300 mb-4" />
           Nenhuma auditoria encontrada para "{historySearch}".
         </div>
       ) : (
-        <div className="bg-white shadow-sm border border-slate-200 rounded-2xl overflow-hidden">
+        <div className="bg-white shadow-sm border border-grafite-200 rounded-2xl overflow-hidden">
           <table className="w-full text-left border-collapse font-sans text-sm">
             <thead>
-              <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase tracking-wider text-xs">
+              <tr className="bg-papel text-grafite-500 font-bold border-b border-grafite-200 uppercase tracking-wider text-xs">
                 <th className="p-4 text-center w-24">Nº RAI</th>
                 <th className="p-4 text-center w-32">DATA</th>
                 <th className="p-4">UNIDADE</th>
@@ -3533,18 +3533,18 @@ Gestão da Qualidade — Kalenborn do Brasil`
                 <th className="p-4 text-center w-32">AÇÕES</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            <tbody className="divide-y divide-grafite-100 bg-white">
               {pagedAudits.map((audit) => (
-                <tr key={audit.id} className="hover:bg-indigo-50/40 transition-colors">
-                  <td className="p-4 text-center font-black text-slate-800 font-mono">{audit.raiNumber}</td>
-                  <td className="p-4 text-center text-slate-500">{audit.date}</td>
-                  <td className="p-4 font-bold text-indigo-700">{audit.branch}</td>
+                <tr key={audit.id} className="hover:bg-papel/40 transition-colors">
+                  <td className="p-4 text-center font-semibold text-grafite-800 font-mono">{audit.raiNumber}</td>
+                  <td className="p-4 text-center text-grafite-500">{audit.date}</td>
+                  <td className="p-4 font-bold text-grafite-950">{audit.branch}</td>
                   <td className="p-4 font-bold uppercase">
-                    <SetorComTooltip setor={audit.sector} className="text-slate-700" />
+                    <SetorComTooltip setor={audit.sector} className="text-grafite-700" />
                   </td>
-                  <td className="p-4 text-slate-500">{audit.auditor}</td>
+                  <td className="p-4 text-grafite-500">{audit.auditor}</td>
                   <td className="p-4 text-center">
-                    <span className={`px-3 py-1 rounded-full text-xs font-black shadow-sm border ${audit.ncCount > 0 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm border ${audit.ncCount > 0 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
                       {audit.ncCount}
                     </span>
                   </td>
@@ -3553,7 +3553,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                       <button
                         onClick={() => loadAudit(audit)}
                         disabled={loadingAuditId === audit.id}
-                        className="bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-600 hover:text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm disabled:opacity-50 disabled:cursor-wait"
+                        className="bg-white text-grafite-900 border border-grafite-200 hover:bg-grafite-900 hover:text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm disabled:opacity-50 disabled:cursor-wait"
                       >
                         {loadingAuditId === audit.id ? '...' : 'VER'}
                       </button>
@@ -3593,25 +3593,25 @@ Gestão da Qualidade — Kalenborn do Brasil`
               ))}
             </tbody>
           </table>
-          <div className="bg-slate-50 border-t border-slate-200 p-4 text-xs text-slate-500 flex justify-between items-center">
+          <div className="bg-papel border-t border-grafite-200 p-4 text-xs text-grafite-500 flex justify-between items-center">
             <span>
               Exibindo {pagedAudits.length} de {filteredAudits.length} registro(s)
               {historySearch ? ` (filtrado de ${savedAudits.length} no total)` : ''}.
             </span>
             <div className="flex items-center gap-3">
-              <span className="text-slate-400">Página {historyPage} de {historyTotalPages}</span>
+              <span className="text-grafite-400">Página {historyPage} de {historyTotalPages}</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
                   disabled={historyPage <= 1}
-                  className="px-3 py-1 border border-slate-300 rounded-lg bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 border border-grafite-300 rounded-lg bg-white hover:bg-grafite-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Anterior
                 </button>
                 <button
                   onClick={() => setHistoryPage((p) => Math.min(historyTotalPages, p + 1))}
                   disabled={historyPage >= historyTotalPages}
-                  className="px-3 py-1 border border-slate-300 rounded-lg bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 border border-grafite-300 rounded-lg bg-white hover:bg-grafite-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Próximo
                 </button>
@@ -3632,7 +3632,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
       onDragStart={() => setDraggedEventId(ev.id)}
       onDragEnd={() => { setDraggedEventId(null); setDragOverDateKey(null); }}
       onClick={(e) => { e.stopPropagation(); setEventDraft(ev); }}
-      className={`group flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md px-1.5 py-1 cursor-grab active:cursor-grabbing transition ${compact ? 'text-[10px]' : 'text-xs'}`}
+      className={`group flex items-center gap-1 bg-grafite-900 hover:bg-grafite-950 text-white rounded-md px-1.5 py-1 cursor-grab active:cursor-grabbing transition ${compact ? 'text-[10px]' : 'text-xs'}`}
       title={`${ev.sector} · ${formatTimeRange(ev.time, ev.durationMin)} · ${ev.auditor}`}
     >
       <GripVertical size={10} className="shrink-0 opacity-50 group-hover:opacity-90" />
@@ -3648,10 +3648,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
     const todayKey = toDateKey(new Date());
 
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-200">
+      <div className="bg-white rounded-2xl shadow-sm border border-grafite-100 overflow-hidden">
+        <div className="grid grid-cols-7 bg-papel border-b border-grafite-200">
           {WEEKDAY_LABELS.map((d) => (
-            <div key={d} className="p-3 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">{d}</div>
+            <div key={d} className="p-3 text-center text-[11px] font-bold text-grafite-400 uppercase tracking-wider">{d}</div>
           ))}
         </div>
         <div className="grid grid-cols-7">
@@ -3669,11 +3669,11 @@ Gestão da Qualidade — Kalenborn do Brasil`
                 onDragLeave={() => setDragOverDateKey((prev) => (prev === dateKey ? null : prev))}
                 onDrop={(e) => { e.preventDefault(); handleDropOnDate(dateKey); }}
                 onClick={() => setEventDraft({ id: null, dateKey, time: '09:00', durationMin: 60, sector: selectedSector, auditor: AUDITORES[0], branch: selectedBranch, notes: '' })}
-                className={`min-h-[100px] border-b border-r border-slate-100 p-1.5 cursor-pointer transition-colors ${
-                  inMonth ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50 text-slate-300'
-                } ${isDragOver ? 'bg-indigo-50 ring-2 ring-inset ring-indigo-400' : ''}`}
+                className={`min-h-[100px] border-b border-r border-grafite-100 p-1.5 cursor-pointer transition-colors ${
+                  inMonth ? 'bg-white hover:bg-papel' : 'bg-papel/50 text-grafite-300'
+                } ${isDragOver ? 'bg-papel ring-2 ring-inset ring-grafite-400' : ''}`}
               >
-                <div className={`text-xs font-bold mb-1 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'bg-indigo-600 text-white' : inMonth ? 'text-slate-600' : 'text-slate-300'}`}>
+                <div className={`text-xs font-bold mb-1 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'bg-grafite-900 text-white' : inMonth ? 'text-grafite-600' : 'text-grafite-300'}`}>
                   {day.getDate()}
                 </div>
                 <div className="space-y-1">
@@ -3692,15 +3692,15 @@ Gestão da Qualidade — Kalenborn do Brasil`
     const todayKey = toDateKey(new Date());
 
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-200">
+      <div className="bg-white rounded-2xl shadow-sm border border-grafite-100 overflow-hidden">
+        <div className="grid grid-cols-7 bg-papel border-b border-grafite-200">
           {days.map((day) => {
             const dateKey = toDateKey(day);
             const isToday = dateKey === todayKey;
             return (
-              <div key={dateKey} className="p-3 text-center border-r border-slate-100 last:border-r-0">
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{WEEKDAY_LABELS[day.getDay()]}</div>
-                <div className={`mt-1 text-sm font-black w-7 h-7 mx-auto flex items-center justify-center rounded-full ${isToday ? 'bg-indigo-600 text-white' : 'text-slate-700'}`}>
+              <div key={dateKey} className="p-3 text-center border-r border-grafite-100 last:border-r-0">
+                <div className="text-[11px] font-bold text-grafite-400 uppercase tracking-wider">{WEEKDAY_LABELS[day.getDay()]}</div>
+                <div className={`mt-1 text-sm font-semibold w-7 h-7 mx-auto flex items-center justify-center rounded-full ${isToday ? 'bg-grafite-900 text-white' : 'text-grafite-700'}`}>
                   {day.getDate()}
                 </div>
               </div>
@@ -3719,7 +3719,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                 onDragLeave={() => setDragOverDateKey((prev) => (prev === dateKey ? null : prev))}
                 onDrop={(e) => { e.preventDefault(); handleDropOnDate(dateKey); }}
                 onClick={() => setEventDraft({ id: null, dateKey, time: '09:00', durationMin: 60, sector: selectedSector, auditor: AUDITORES[0], branch: selectedBranch, notes: '' })}
-                className={`border-r border-slate-100 last:border-r-0 p-2 space-y-1.5 cursor-pointer hover:bg-slate-50 transition-colors ${isDragOver ? 'bg-indigo-50 ring-2 ring-inset ring-indigo-400' : ''}`}
+                className={`border-r border-grafite-100 last:border-r-0 p-2 space-y-1.5 cursor-pointer hover:bg-papel transition-colors ${isDragOver ? 'bg-papel ring-2 ring-inset ring-grafite-400' : ''}`}
               >
                 {dayEvents.map((ev) => renderEventChip(ev, false))}
               </div>
@@ -3734,53 +3734,53 @@ Gestão da Qualidade — Kalenborn do Brasil`
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-2">
         <div>
-          <h2 className="text-2xl font-black text-slate-900">Calendário de Auditorias</h2>
-          <p className="text-slate-500 text-sm mt-1">Programe as auditorias por setor — arraste um item para reagendar</p>
+          <h2 className="text-[22px] leading-snug font-semibold tracking-tightish text-grafite-900">Calendário de Auditorias</h2>
+          <p className="text-grafite-500 text-sm mt-1">Programe as auditorias por setor — arraste um item para reagendar</p>
         </div>
         <button
           onClick={() => setEventDraft({ id: null, dateKey: toDateKey(new Date()), time: '09:00', durationMin: 60, sector: selectedSector, auditor: AUDITORES[0], branch: selectedBranch, notes: '' })}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-bold transition shadow-lg shadow-indigo-600/25 flex items-center gap-2 self-start"
+          className="bg-grafite-900 hover:bg-grafite-950 text-white px-5 py-3 rounded-xl font-bold transition shadow-lg shadow-grafite-900/25 flex items-center gap-2 self-start"
         >
           <Plus size={18} strokeWidth={2.5} /> Programar Auditoria
         </button>
       </div>
 
-      <div className="flex flex-wrap justify-between items-center gap-3 bg-white rounded-2xl shadow-sm border border-slate-100 p-3">
+      <div className="flex flex-wrap justify-between items-center gap-3 bg-white rounded-2xl shadow-sm border border-grafite-100 p-3">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCalendarAnchor((d) => (calendarView === 'month' ? new Date(d.getFullYear(), d.getMonth() - 1, 1) : addDays(d, -7)))}
-            className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 transition"
+            className="p-2 rounded-lg hover:bg-grafite-100 text-grafite-600 transition"
           >
             <ChevronLeft size={18} />
           </button>
-          <span className="font-bold text-slate-800 min-w-[160px] text-center">
+          <span className="font-bold text-grafite-800 min-w-[160px] text-center">
             {calendarView === 'month'
               ? `${MONTH_LABELS[calendarAnchor.getMonth()]} de ${calendarAnchor.getFullYear()}`
               : `Semana de ${startOfWeek(calendarAnchor).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`}
           </span>
           <button
             onClick={() => setCalendarAnchor((d) => (calendarView === 'month' ? new Date(d.getFullYear(), d.getMonth() + 1, 1) : addDays(d, 7)))}
-            className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 transition"
+            className="p-2 rounded-lg hover:bg-grafite-100 text-grafite-600 transition"
           >
             <ChevronRight size={18} />
           </button>
           <button
             onClick={() => setCalendarAnchor(new Date())}
-            className="ml-2 text-xs font-bold text-indigo-600 hover:underline"
+            className="ml-2 text-xs font-bold text-grafite-900 hover:underline"
           >
             Hoje
           </button>
         </div>
-        <div className="flex bg-slate-100 rounded-xl p-1">
+        <div className="flex bg-grafite-100 rounded-xl p-1">
           <button
             onClick={() => setCalendarView('month')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${calendarView === 'month' ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-500'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${calendarView === 'month' ? 'bg-white shadow-sm text-grafite-950' : 'text-grafite-500'}`}
           >
             <CalendarDays size={14} /> Mês
           </button>
           <button
             onClick={() => setCalendarView('week')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${calendarView === 'week' ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-500'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${calendarView === 'week' ? 'bg-white shadow-sm text-grafite-950' : 'text-grafite-500'}`}
           >
             <CalendarRange size={14} /> Semana
           </button>
@@ -3789,7 +3789,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
       {calendarView === 'month' ? renderMonthView() : renderWeekView()}
 
-      <p className="text-xs text-slate-400 text-center print:hidden">
+      <p className="text-xs text-grafite-400 text-center print:hidden">
         Clique em um dia vazio para programar uma nova auditoria, ou em um item existente para editar. Arraste para reagendar.
       </p>
     </div>
@@ -3800,8 +3800,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-2">
         <div>
-          <h2 className="text-2xl font-black text-slate-900">Documentos por Setor</h2>
-          <p className="text-slate-500 text-sm mt-1">
+          <h2 className="text-[22px] leading-snug font-semibold tracking-tightish text-grafite-900">Documentos por Setor</h2>
+          <p className="text-grafite-500 text-sm mt-1">
             {documentos.length} documento(s) cadastrado(s)
             {docsVencidos > 0 && <span className="text-rose-600 font-bold ml-2">· {docsVencidos} vencido(s)</span>}
             {docsProximos > 0 && <span className="text-amber-600 font-bold ml-2">· {docsProximos} vence em 30 dias</span>}
@@ -3809,7 +3809,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
         </div>
         <button
           onClick={() => setDocDraft({ setor: docSectorFilter !== 'TODOS' ? docSectorFilter : SECTORS[0], nome: '', tipo: DOC_TIPOS[0], url: '', responsavel: '', validade: '', descricao: '' })}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-bold transition shadow-lg shadow-indigo-600/25 flex items-center gap-2 self-start"
+          className="bg-grafite-900 hover:bg-grafite-950 text-white px-5 py-3 rounded-xl font-bold transition shadow-lg shadow-grafite-900/25 flex items-center gap-2 self-start"
         >
           <Plus size={18} strokeWidth={2.5} /> Adicionar Documento
         </button>
@@ -3834,10 +3834,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
       )}
 
       {/* Filtros — admin vê todos os setores, usuário de setor vê só o seu */}
-      <div className="flex flex-wrap gap-3 items-center bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+      <div className="flex flex-wrap gap-3 items-center bg-white rounded-2xl shadow-sm border border-grafite-100 p-4">
         {isAdmin ? (
           <>
-            <div className="flex items-center gap-2 text-slate-500">
+            <div className="flex items-center gap-2 text-grafite-500">
               <Filter size={15} />
               <span className="text-xs font-bold uppercase tracking-wider">Filtrar por setor:</span>
             </div>
@@ -3848,8 +3848,8 @@ Gestão da Qualidade — Kalenborn do Brasil`
                   onClick={() => setDocSectorFilter(s)}
                   className={`px-3 py-1 rounded-full text-xs font-bold border transition ${
                     docSectorFilter === s
-                      ? 'bg-indigo-600 text-white border-indigo-600'
-                      : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                      ? 'bg-grafite-900 text-white border-grafite-900'
+                      : 'bg-white text-grafite-500 border-grafite-200 hover:bg-papel'
                   }`}
                 >
                   {s === 'TODOS' ? 'Todos' : s}
@@ -3862,15 +3862,15 @@ Gestão da Qualidade — Kalenborn do Brasil`
           </>
         ) : (
           <div className="flex items-center gap-2">
-            <Folder size={15} className="text-indigo-600" />
-            <span className="text-sm font-bold text-slate-700">
-              Setor: <span className="text-indigo-600">{userSetores[0]}</span>
+            <Folder size={15} className="text-grafite-900" />
+            <span className="text-sm font-bold text-grafite-700">
+              Setor: <span className="text-grafite-900">{userSetores[0]}</span>
             </span>
-            <span className="text-xs text-slate-400 ml-2">({documentos.filter((d) => userSetores.includes(d.setor)).length} documento(s))</span>
+            <span className="text-xs text-grafite-400 ml-2">({documentos.filter((d) => userSetores.includes(d.setor)).length} documento(s))</span>
           </div>
         )}
-        <div className="ml-auto flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 min-w-[220px] focus-within:ring-2 focus-within:ring-indigo-500">
-          <Search size={14} className="text-slate-400 shrink-0" />
+        <div className="ml-auto flex items-center gap-2 bg-papel border border-grafite-200 rounded-xl px-3 py-2 min-w-[220px] focus-within:ring-2 focus-within:ring-grafite-700">
+          <Search size={14} className="text-grafite-400 shrink-0" />
           <input
             type="text"
             placeholder="Buscar documento, tipo..."
@@ -3883,10 +3883,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
       {/* Lista de documentos */}
       {filteredDocumentos.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center text-slate-400 shadow-sm flex flex-col items-center justify-center gap-4">
-          <Folder size={56} className="text-slate-200" />
+        <div className="bg-white border border-grafite-200 rounded-2xl p-16 text-center text-grafite-400 shadow-sm flex flex-col items-center justify-center gap-4">
+          <Folder size={56} className="text-grafite-200" />
           <div>
-            <p className="font-bold text-slate-500">Nenhum documento encontrado</p>
+            <p className="font-bold text-grafite-500">Nenhum documento encontrado</p>
             <p className="text-sm mt-1">
               {docSearch || docSectorFilter !== 'TODOS'
                 ? 'Tente ajustar os filtros de busca.'
@@ -3901,18 +3901,18 @@ Gestão da Qualidade — Kalenborn do Brasil`
             const statusColors = {
               vencido: { bg: 'bg-rose-50', border: 'border-rose-200', badge: 'bg-rose-100 text-rose-700', dot: 'bg-rose-500', label: 'Vencido' },
               proximo: { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400', label: 'Vence em breve' },
-              ok:      { bg: 'bg-white', border: 'border-slate-100', badge: 'bg-emerald-50 text-emerald-700', dot: 'bg-emerald-500', label: 'Válido' },
+              ok:      { bg: 'bg-white', border: 'border-grafite-100', badge: 'bg-emerald-50 text-emerald-700', dot: 'bg-emerald-500', label: 'Válido' },
             };
             const sc = statusColors[status] || statusColors.ok;
             return (
               <div key={doc.id} className={`${sc.bg} border ${sc.border} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-3 group`}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="font-black text-slate-800 text-sm leading-snug truncate">{doc.nome}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{doc.setor}</p>
+                    <p className="font-semibold text-grafite-800 text-sm leading-snug truncate">{doc.nome}</p>
+                    <p className="text-xs text-grafite-500 mt-0.5">{doc.setor}</p>
                   </div>
                   <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition">
-                    <button onClick={() => { setDocDraft({ ...doc }); setDocUploadFile(null); setDocUploadError(''); }} className="p-1.5 rounded-lg hover:bg-indigo-50 text-indigo-600 transition" title="Editar">
+                    <button onClick={() => { setDocDraft({ ...doc }); setDocUploadFile(null); setDocUploadError(''); }} className="p-1.5 rounded-lg hover:bg-papel text-grafite-900 transition" title="Editar">
                       <Edit3 size={14} />
                     </button>
                     <button
@@ -3931,7 +3931,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                 </div>
 
                 <div className="flex flex-wrap gap-1.5">
-                  <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full">{doc.tipo}</span>
+                  <span className="bg-papel text-grafite-950 text-[10px] font-bold px-2 py-0.5 rounded-full">{doc.tipo}</span>
                   {status && (
                     <span className={`${sc.badge} text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`}></span>
@@ -3941,15 +3941,15 @@ Gestão da Qualidade — Kalenborn do Brasil`
                 </div>
 
                 {doc.descricao && (
-                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{doc.descricao}</p>
+                  <p className="text-xs text-grafite-500 leading-relaxed line-clamp-2">{doc.descricao}</p>
                 )}
 
-                <div className="mt-auto space-y-1 text-xs text-slate-500">
+                <div className="mt-auto space-y-1 text-xs text-grafite-500">
                   {doc.storage_name && (
-                    <div className="flex items-center gap-1.5 text-indigo-600 font-medium">
+                    <div className="flex items-center gap-1.5 text-grafite-900 font-medium">
                       <FileBadge size={11} />
                       <span className="truncate">{doc.storage_name}</span>
-                      {doc.storage_size && <span className="shrink-0 text-slate-400">· {formatFileSize(doc.storage_size)}</span>}
+                      {doc.storage_size && <span className="shrink-0 text-grafite-400">· {formatFileSize(doc.storage_size)}</span>}
                     </div>
                   )}
                   {doc.responsavel && (
@@ -3968,7 +3968,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                     href={doc.url.startsWith('http') ? doc.url : `file://${doc.url}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 text-xs font-bold border border-indigo-100 bg-indigo-50 hover:bg-indigo-100 rounded-lg px-3 py-2 transition mt-1"
+                    className="flex items-center gap-2 text-grafite-900 hover:text-grafite-800 text-xs font-bold border border-grafite-100 bg-papel hover:bg-grafite-100 rounded-lg px-3 py-2 transition mt-1"
                   >
                     <ExternalLink size={13} />
                     {doc.storage_name ? 'Baixar arquivo' : 'Abrir documento'}
@@ -3986,72 +3986,72 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-5">
               <div>
-                <h3 className="text-lg font-black text-slate-900">{docDraft.id ? 'Editar Documento' : 'Adicionar Documento'}</h3>
-                <p className="text-xs text-slate-500 mt-1">Registre o documento e o link/caminho de acesso na rede</p>
+                <h3 className="text-lg font-semibold text-grafite-900">{docDraft.id ? 'Editar Documento' : 'Adicionar Documento'}</h3>
+                <p className="text-xs text-grafite-500 mt-1">Registre o documento e o link/caminho de acesso na rede</p>
               </div>
-              <button onClick={() => { setDocDraft(null); setDocUploadFile(null); setDocUploadError(''); }} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
+              <button onClick={() => { setDocDraft(null); setDocUploadFile(null); setDocUploadError(''); }} className="text-grafite-400 hover:text-grafite-600"><X size={18} /></button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Setor *</label>
+                <label className="text-xs font-bold text-grafite-500 uppercase tracking-wider mb-1.5 block">Setor *</label>
                 <select
                   value={docDraft.setor}
                   onChange={(e) => setDocDraft({ ...docDraft, setor: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-grafite-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-grafite-700"
                 >
                   {SECTORS.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Nome do Documento *</label>
+                <label className="text-xs font-bold text-grafite-500 uppercase tracking-wider mb-1.5 block">Nome do Documento *</label>
                 <input
                   type="text"
                   placeholder="Ex.: PROC027 - Controle de Documentos"
                   value={docDraft.nome}
                   onChange={(e) => setDocDraft({ ...docDraft, nome: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-grafite-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-grafite-700"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Tipo *</label>
+                  <label className="text-xs font-bold text-grafite-500 uppercase tracking-wider mb-1.5 block">Tipo *</label>
                   <select
                     value={docDraft.tipo}
                     onChange={(e) => setDocDraft({ ...docDraft, tipo: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
+                    className="w-full border border-grafite-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-grafite-700"
                   >
                     {DOC_TIPOS.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Validade</label>
+                  <label className="text-xs font-bold text-grafite-500 uppercase tracking-wider mb-1.5 block">Validade</label>
                   <input
                     type="date"
                     value={docDraft.validade}
                     onChange={(e) => setDocDraft({ ...docDraft, validade: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
+                    className="w-full border border-grafite-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-grafite-700"
                   />
                 </div>
               </div>
 
               <div>
                 {/* Upload de arquivo OU link externo — os dois são opcionais mas pelo menos um é útil */}
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Arquivo do Documento</label>
+                <label className="text-xs font-bold text-grafite-500 uppercase tracking-wider mb-1.5 block">Arquivo do Documento</label>
 
                 {/* Arquivo já carregado (edição) */}
                 {docDraft.storage_name && !docUploadFile && (
-                  <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl p-3 mb-2">
-                    <FileBadge size={18} className="text-indigo-600 shrink-0" />
+                  <div className="flex items-center gap-3 bg-papel border border-grafite-200 rounded-xl p-3 mb-2">
+                    <FileBadge size={18} className="text-grafite-900 shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-700 truncate">{docDraft.storage_name}</p>
-                      <p className="text-xs text-slate-500">{formatFileSize(docDraft.storage_size)}</p>
+                      <p className="text-sm font-bold text-grafite-700 truncate">{docDraft.storage_name}</p>
+                      <p className="text-xs text-grafite-500">{formatFileSize(docDraft.storage_size)}</p>
                     </div>
                     <button
                       onClick={() => setDocDraft({ ...docDraft, storage_path: null, storage_name: null, storage_size: null, storage_mime: null })}
-                      className="text-slate-400 hover:text-rose-500 transition shrink-0"
+                      className="text-grafite-400 hover:text-rose-500 transition shrink-0"
                       title="Remover arquivo"
                     >
                       <X size={16} />
@@ -4064,10 +4064,10 @@ Gestão da Qualidade — Kalenborn do Brasil`
                   <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-2">
                     <Upload size={18} className="text-emerald-600 shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-700 truncate">{docUploadFile.name}</p>
-                      <p className="text-xs text-slate-500">{formatFileSize(docUploadFile.size)} · Pronto para enviar</p>
+                      <p className="text-sm font-bold text-grafite-700 truncate">{docUploadFile.name}</p>
+                      <p className="text-xs text-grafite-500">{formatFileSize(docUploadFile.size)} · Pronto para enviar</p>
                     </div>
-                    <button onClick={() => setDocUploadFile(null)} className="text-slate-400 hover:text-rose-500 transition shrink-0">
+                    <button onClick={() => setDocUploadFile(null)} className="text-grafite-400 hover:text-rose-500 transition shrink-0">
                       <X size={16} />
                     </button>
                   </div>
@@ -4075,13 +4075,13 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
                 {/* Botão de selecionar arquivo */}
                 {!docUploadFile && (
-                  <label className="flex items-center gap-3 border-2 border-dashed border-slate-200 hover:border-indigo-400 rounded-xl p-4 cursor-pointer transition group">
-                    <Upload size={20} className="text-slate-400 group-hover:text-indigo-500 transition shrink-0" />
+                  <label className="flex items-center gap-3 border-2 border-dashed border-grafite-200 hover:border-grafite-400 rounded-xl p-4 cursor-pointer transition group">
+                    <Upload size={20} className="text-grafite-400 group-hover:text-grafite-700 transition shrink-0" />
                     <div>
-                      <p className="text-sm font-bold text-slate-600 group-hover:text-indigo-600 transition">
+                      <p className="text-sm font-bold text-grafite-600 group-hover:text-grafite-900 transition">
                         {docDraft.storage_name ? 'Trocar arquivo' : 'Carregar arquivo'}
                       </p>
-                      <p className="text-xs text-slate-400">PDF, Word, Excel, imagem — até 50 MB</p>
+                      <p className="text-xs text-grafite-400">PDF, Word, Excel, imagem — até 50 MB</p>
                     </div>
                     <input
                       type="file"
@@ -4097,9 +4097,9 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
                 {/* Separador OU */}
                 <div className="flex items-center gap-3 my-3">
-                  <div className="flex-1 h-px bg-slate-200"></div>
-                  <span className="text-xs text-slate-400 font-bold">OU cole um link externo</span>
-                  <div className="flex-1 h-px bg-slate-200"></div>
+                  <div className="flex-1 h-px bg-grafite-200"></div>
+                  <span className="text-xs text-grafite-400 font-bold">OU cole um link externo</span>
+                  <div className="flex-1 h-px bg-grafite-200"></div>
                 </div>
 
                 <input
@@ -4107,30 +4107,30 @@ Gestão da Qualidade — Kalenborn do Brasil`
                   placeholder="https://sharepoint.com/... ou \\servidor\pasta\arquivo.pdf"
                   value={docDraft.url || ''}
                   onChange={(e) => setDocDraft({ ...docDraft, url: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 font-mono"
+                  className="w-full border border-grafite-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-grafite-700 font-mono"
                 />
-                <p className="text-[10px] text-slate-400 mt-1">SharePoint, OneDrive, Google Drive, caminho de rede</p>
+                <p className="text-[10px] text-grafite-400 mt-1">SharePoint, OneDrive, Google Drive, caminho de rede</p>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Responsável</label>
+                <label className="text-xs font-bold text-grafite-500 uppercase tracking-wider mb-1.5 block">Responsável</label>
                 <input
                   type="text"
                   placeholder="Nome do responsável pelo documento"
                   value={docDraft.responsavel}
                   onChange={(e) => setDocDraft({ ...docDraft, responsavel: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-grafite-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-grafite-700"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Descrição / Observações</label>
+                <label className="text-xs font-bold text-grafite-500 uppercase tracking-wider mb-1.5 block">Descrição / Observações</label>
                 <textarea
                   rows="2"
                   placeholder="Breve descrição do propósito do documento..."
                   value={docDraft.descricao}
                   onChange={(e) => setDocDraft({ ...docDraft, descricao: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 resize-none"
+                  className="w-full border border-grafite-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-grafite-700 resize-none"
                 />
               </div>
 
@@ -4145,7 +4145,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => { setDocDraft(null); setDocUploadFile(null); setDocUploadError(''); }}
-                className="px-4 py-2.5 rounded-xl font-bold text-sm text-slate-600 hover:bg-slate-100 transition"
+                className="px-4 py-2.5 rounded-xl font-bold text-sm text-grafite-600 hover:bg-grafite-100 transition"
                 disabled={docUploading}
               >
                 Cancelar
@@ -4164,7 +4164,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                 }}
                 disabled={docUploading}
                 className={`px-5 py-2.5 rounded-xl font-bold text-sm text-white transition shadow-lg flex items-center gap-2 ${
-                  docUploading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'
+                  docUploading ? 'bg-grafite-400 cursor-not-allowed' : 'bg-grafite-900 hover:bg-grafite-950 shadow-grafite-900/25'
                 }`}
               >
                 {docUploading ? (
@@ -4195,7 +4195,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
 
   return (
-    <div className="min-h-screen bg-[#F4F5F9] flex font-sans">
+    <div className="min-h-screen bg-papel flex font-sans">
       {/* Overlay escuro atrás do menu quando aberto no mobile — toca fora pra fechar */}
       {mobileMenuOpen && (
         <div
@@ -4205,31 +4205,31 @@ Gestão da Qualidade — Kalenborn do Brasil`
       )}
 
       {/* SIDEBAR — vira painel deslizante no mobile (fixed + translate), fica fixo normalmente a partir de md */}
-      <aside className={`w-[280px] bg-[#0B1020] text-slate-300 flex flex-col shadow-2xl z-40 print:hidden fixed inset-y-0 left-0 transition-transform duration-200 md:static md:translate-x-0 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-6 border-b border-white/5 bg-gradient-to-br from-[#0B1020] to-[#10142B]">
+      <aside className={`w-[280px] bg-grafite-950 text-grafite-300 flex flex-col shadow-2xl z-40 print:hidden fixed inset-y-0 left-0 transition-transform duration-200 md:static md:translate-x-0 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-6 border-b border-white/5 bg-grafite-950">
           <div className="flex items-center justify-between">
             <KalenLogo variant="sidebar" />
-            <button onClick={() => setMobileMenuOpen(false)} className="md:hidden text-slate-400 hover:text-white p-1">
+            <button onClick={() => setMobileMenuOpen(false)} className="md:hidden text-grafite-400 hover:text-white p-1">
               <X size={20} />
             </button>
           </div>
           <div className="mt-3 flex items-center gap-2">
-            <div className="w-5 h-px bg-indigo-600/60"></div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Sistema de Gestão de Auditoria</p>
+            <div className="w-5 h-px bg-grafite-900/60"></div>
+            <p className="text-[10px] text-grafite-500 uppercase tracking-widest font-bold">Sistema de Gestão de Auditoria</p>
           </div>
         </div>
 
         <div className="px-6 py-4 border-b border-white/5">
-          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Unidade Selecionada</label>
+          <label className="text-[11px] font-bold text-grafite-500 uppercase tracking-wider mb-2 block">Unidade Selecionada</label>
           <div className="relative">
             <select
               value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 text-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none cursor-pointer"
+              className="w-full bg-white/5 border border-white/10 text-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-grafite-700 focus:border-grafite-700 appearance-none cursor-pointer"
             >
               {BRANCHES.map((branch) => <option key={branch} value={branch} className="text-black">{branch}</option>)}
             </select>
-            <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-grafite-400 pointer-events-none" />
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-grafite-400 pointer-events-none" />
           </div>
         </div>
 
@@ -4238,17 +4238,20 @@ Gestão da Qualidade — Kalenborn do Brasil`
             <React.Fragment key={item.id}>
               {item.section && (
                 <div className="pt-4 pb-2">
-                  <p className="px-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">{item.section}</p>
+                  <p className="px-4 text-[11px] font-bold text-grafite-500 uppercase tracking-wider">{item.section}</p>
                 </div>
               )}
               <button
                 onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id ? 'bg-indigo-600/15 text-indigo-300 font-bold' : 'hover:bg-white/5 hover:text-white font-medium text-slate-400'}`}
+                className={`relative w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === item.id ? 'bg-white/[0.07] text-white font-semibold' : 'hover:bg-white/[0.04] hover:text-grafite-100 font-normal text-grafite-400'}`}
               >
-                <item.icon size={19} className={activeTab === item.id ? 'text-indigo-400' : ''} />
+                {activeTab === item.id && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r bg-marca" />
+                )}
+                <item.icon size={18} className={activeTab === item.id ? 'text-marca' : 'text-grafite-500'} />
                 {item.label}
                 {!!item.badge && (
-                  <span className={`ml-auto text-white text-[10px] font-black px-2 py-0.5 rounded-full ${item.badgeColor === 'amber' ? 'bg-amber-500' : 'bg-rose-500'}`}>{item.badge}</span>
+                  <span className={`ml-auto text-white text-[10px] font-semibold px-2 py-0.5 rounded-full ${item.badgeColor === 'amber' ? 'bg-amber-500' : 'bg-rose-500'}`}>{item.badge}</span>
                 )}
               </button>
             </React.Fragment>
@@ -4259,12 +4262,12 @@ Gestão da Qualidade — Kalenborn do Brasil`
           {/* Info do usuário logado */}
           <div className="rounded-xl bg-white/5 border border-white/5 p-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-indigo-600/30 text-indigo-300 rounded-full flex items-center justify-center font-black text-sm shrink-0">
+              <div className="w-8 h-8 bg-grafite-900/30 text-grafite-300 rounded-full flex items-center justify-center font-semibold text-sm shrink-0">
                 {currentUser.nome.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-slate-300 truncate">{currentUser.nome}</p>
-                <p className="text-[10px] text-slate-500 truncate">{isAdmin ? 'Administrador' : currentUser.setor}</p>
+                <p className="text-xs font-bold text-grafite-300 truncate">{currentUser.nome}</p>
+                <p className="text-[10px] text-grafite-500 truncate">{isAdmin ? 'Administrador' : currentUser.setor}</p>
               </div>
             </div>
 
@@ -4272,7 +4275,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
             {isAdmin && (
               <button
                 onClick={() => setShowAdminPanel(true)}
-                className="mt-2.5 w-full text-[10px] font-bold text-indigo-400 hover:text-indigo-300 border border-indigo-800/50 hover:border-indigo-600/50 rounded-lg py-1.5 transition flex items-center justify-center gap-1"
+                className="mt-2.5 w-full text-[11px] font-medium text-grafite-300 hover:text-white border border-white/10 hover:border-white/25 rounded-lg py-2 transition flex items-center justify-center gap-1.5"
               >
                 <ShieldCheck size={11} /> Gerenciar Auditores
               </button>
@@ -4280,43 +4283,43 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
             <button
               onClick={onLogout}
-              className="mt-2 w-full text-[10px] font-bold text-slate-500 hover:text-rose-400 border border-white/5 hover:border-rose-800/50 rounded-lg py-1.5 transition flex items-center justify-center gap-1"
+              className="mt-2 w-full text-[11px] font-medium text-grafite-400 hover:text-rose-300 border border-white/10 hover:border-rose-400/40 rounded-lg py-2 transition flex items-center justify-center gap-1.5"
             >
               <X size={10} /> Sair do Portal
             </button>
           </div>
-          <p className="text-center text-[9px] text-slate-600">Kalenborn do Brasil · SGA v2.0 · ISO 9001:2015</p>
+          <p className="text-center text-[10px] text-grafite-500">Kalenborn do Brasil · SGA v2.0 · ISO 9001:2015</p>
         </div>
       </aside>
 
       {/* ÁREA PRINCIPAL */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
 
-        <header className="h-16 bg-white border-b border-slate-200 shadow-sm flex items-center justify-between px-4 md:px-8 z-10 print:hidden gap-3">
+        <header className="h-16 bg-white border-b border-grafite-200 shadow-sm flex items-center justify-between px-4 md:px-8 z-10 print:hidden gap-3">
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="md:hidden text-slate-500 hover:text-indigo-600 p-2 -ml-2 shrink-0"
+            className="md:hidden text-grafite-500 hover:text-grafite-900 p-2 -ml-2 shrink-0"
             aria-label="Abrir menu"
           >
             <Menu size={22} />
           </button>
-          <div className="flex items-center gap-4 text-slate-500 font-medium text-sm overflow-x-auto">
-            <span className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg text-slate-700 font-bold shrink-0">
-              <Building2 size={16} className="text-indigo-600" /> {selectedBranch}
+          <div className="flex items-center gap-4 text-grafite-500 font-medium text-sm overflow-x-auto">
+            <span className="flex items-center gap-2 bg-grafite-100 px-3 py-1.5 rounded-lg text-grafite-700 font-bold shrink-0">
+              <Building2 size={16} className="text-grafite-900" /> {selectedBranch}
             </span>
             {!isAdmin && (
-              <span className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5">
+              <span className="bg-papel text-grafite-950 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5">
                 <Folder size={13} /> {userSetores[0]}
               </span>
             )}
-            <span className="hidden lg:flex items-center gap-1.5 text-slate-400 text-xs">
+            <span className="hidden lg:flex items-center gap-1.5 text-grafite-400 text-xs">
               <Clock size={13} /> Atualizado em {formattedDate}
             </span>
             {isAdmin && (
               <span className={`flex items-center gap-1.5 text-xs font-bold transition-all ${
                 autoSaveStatus === 'saved' ? 'text-emerald-600' :
                 autoSaveStatus === 'unsaved' ? 'text-amber-500' :
-                autoSaveStatus === 'saving' ? 'text-indigo-500 animate-pulse' :
+                autoSaveStatus === 'saving' ? 'text-grafite-700 animate-pulse' :
                 'text-rose-600'
               }`}>
                 {autoSaveStatus === 'saved' && <><Check size={12} /> Salvo{lastSavedAt ? ` às ${lastSavedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : ''}</>}
@@ -4340,23 +4343,23 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <div className="flex items-center gap-4">
             {isAdmin && (
               <div className="relative cursor-pointer">
-                <Bell size={20} className="text-slate-500 hover:text-indigo-600 transition" />
+                <Bell size={20} className="text-grafite-500 hover:text-grafite-900 transition" />
                 {rncs.filter((r) => r.status === 'Aberta').length > 0 && (
                   <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></div>
                 )}
               </div>
             )}
-            <div className="h-6 w-px bg-slate-200"></div>
+            <div className="h-6 w-px bg-grafite-200"></div>
             <div className="flex items-center gap-3">
               <div className="text-right hidden md:block">
-                <p className="text-sm font-bold text-slate-800">{currentUser.nome}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                <p className="text-sm font-bold text-grafite-800">{currentUser.nome}</p>
+                <p className="text-[10px] text-grafite-500 uppercase tracking-widest font-bold">
                   {isAdmin ? 'Administrador · SGQ' : currentUser.setor}
                 </p>
               </div>
               <button
                 onClick={onLogout}
-                className="w-10 h-10 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-black border-2 border-white shadow-sm hover:bg-rose-100 hover:text-rose-700 transition text-sm"
+                className="w-10 h-10 bg-grafite-100 text-grafite-950 rounded-full flex items-center justify-center font-semibold border-2 border-white shadow-sm hover:bg-rose-100 hover:text-rose-700 transition text-sm"
                 title="Sair"
               >
                 {currentUser.nome.charAt(0).toUpperCase()}
@@ -4365,7 +4368,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto bg-[#F4F5F9] p-4 md:p-8 print:p-0 print:bg-white">
+        <main className="flex-1 overflow-auto bg-papel p-4 md:p-8 print:p-0 print:bg-white">
           <div className="max-w-7xl mx-auto print-area">
             {activeTab === 'dashboard'         && renderDashboard()}
             {activeTab === 'minhas_auditorias' && renderMinhasAuditorias()}
@@ -4397,27 +4400,27 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-5">
               <div>
-                <h3 className="text-lg font-black text-slate-900">Gerenciar Auditores</h3>
-                <p className="text-xs text-slate-500 mt-1">Selecione as pessoas que terão acesso de administrador ao portal (mesmo nível que você)</p>
+                <h3 className="text-lg font-semibold text-grafite-900">Gerenciar Auditores</h3>
+                <p className="text-xs text-grafite-500 mt-1">Selecione as pessoas que terão acesso de administrador ao portal (mesmo nível que você)</p>
               </div>
-              <button onClick={() => setShowAdminPanel(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
+              <button onClick={() => setShowAdminPanel(false)} className="text-grafite-400 hover:text-grafite-600"><X size={18} /></button>
             </div>
 
             <div className="space-y-2">
               {USUARIOS_BASE.filter((u) => u.email !== 'luciene.batista@kalenborn.com.br').map((u) => {
                 const isPromovido = extraAdmins.includes(u.email.toLowerCase());
                 return (
-                  <div key={u.email} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
+                  <div key={u.email} className="flex items-center justify-between p-3 rounded-xl border border-grafite-100 hover:bg-papel transition">
                     <div>
-                      <p className="text-sm font-bold text-slate-800">{u.nome}</p>
-                      <p className="text-xs text-slate-500">{u.email} · <span className="text-indigo-600">{u.setor}</span></p>
+                      <p className="text-sm font-bold text-grafite-800">{u.nome}</p>
+                      <p className="text-xs text-grafite-500">{u.email} · <span className="text-grafite-900">{u.setor}</span></p>
                     </div>
                     <button
                       onClick={() => toggleExtraAdmin(u.email, isPromovido)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
                         isPromovido
-                          ? 'bg-indigo-600 text-white border-indigo-600 hover:bg-rose-600 hover:border-rose-600'
-                          : 'bg-white text-slate-500 border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600'
+                          ? 'bg-grafite-900 text-white border-grafite-900 hover:bg-rose-600 hover:border-rose-600'
+                          : 'bg-white text-grafite-500 border-grafite-200 hover:bg-papel hover:border-grafite-300 hover:text-grafite-900'
                       }`}
                     >
                       {isPromovido ? 'Auditor ✓' : 'Promover'}
@@ -4428,12 +4431,12 @@ Gestão da Qualidade — Kalenborn do Brasil`
             </div>
 
             {extraAdmins.length > 0 && (
-              <div className="mt-4 bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-700">
+              <div className="mt-4 bg-papel border border-grafite-100 rounded-xl p-3 text-xs text-grafite-950">
                 <span className="font-bold">{extraAdmins.length} auditor(es) promovido(s)</span> — têm acesso completo ao portal enquanto esta configuração estiver ativa.
               </div>
             )}
 
-            <button onClick={() => setShowAdminPanel(false)} className="mt-5 w-full py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+            <button onClick={() => setShowAdminPanel(false)} className="mt-5 w-full py-2.5 rounded-xl font-bold text-sm bg-grafite-100 text-grafite-600 hover:bg-grafite-200 transition">
               Fechar
             </button>
           </div>
@@ -4446,21 +4449,21 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-5">
               <div>
-                <h3 className="text-lg font-black text-slate-900">{eventDraft.id ? 'Editar Auditoria Programada' : 'Programar Nova Auditoria'}</h3>
-                <p className="text-xs text-slate-500 mt-1">{dateKeyToDate(eventDraft.dateKey).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', weekday: 'long' })}</p>
+                <h3 className="text-lg font-semibold text-grafite-900">{eventDraft.id ? 'Editar Auditoria Programada' : 'Programar Nova Auditoria'}</h3>
+                <p className="text-xs text-grafite-500 mt-1">{dateKeyToDate(eventDraft.dateKey).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', weekday: 'long' })}</p>
               </div>
-              <button onClick={() => setEventDraft(null)} aria-label="Fechar" className="text-slate-400 hover:text-slate-600 shrink-0">
+              <button onClick={() => setEventDraft(null)} aria-label="Fechar" className="text-grafite-400 hover:text-grafite-600 shrink-0">
                 <X size={18} />
               </button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Setor</label>
+                <label className="text-xs font-bold text-grafite-500 uppercase tracking-wider mb-1.5 block">Setor</label>
                 <select
                   value={eventDraft.sector}
                   onChange={(e) => setEventDraft({ ...eventDraft, sector: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full border border-grafite-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-grafite-700 focus:border-grafite-700"
                 >
                   {SECTORS.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -4468,56 +4471,56 @@ Gestão da Qualidade — Kalenborn do Brasil`
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Data</label>
+                  <label className="text-xs font-bold text-grafite-500 uppercase tracking-wider mb-1.5 block">Data</label>
                   <input
                     type="date"
                     value={eventDraft.dateKey}
                     onChange={(e) => setEventDraft({ ...eventDraft, dateKey: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full border border-grafite-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-grafite-700 focus:border-grafite-700"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Horário</label>
+                  <label className="text-xs font-bold text-grafite-500 uppercase tracking-wider mb-1.5 block">Horário</label>
                   <input
                     type="time"
                     value={eventDraft.time}
                     onChange={(e) => setEventDraft({ ...eventDraft, time: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full border border-grafite-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-grafite-700 focus:border-grafite-700"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Duração (minutos)</label>
+                <label className="text-xs font-bold text-grafite-500 uppercase tracking-wider mb-1.5 block">Duração (minutos)</label>
                 <input
                   type="number"
                   min="15"
                   step="15"
                   value={eventDraft.durationMin}
                   onChange={(e) => setEventDraft({ ...eventDraft, durationMin: Number(e.target.value) || 60 })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full border border-grafite-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-grafite-700 focus:border-grafite-700"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Auditor Líder</label>
+                <label className="text-xs font-bold text-grafite-500 uppercase tracking-wider mb-1.5 block">Auditor Líder</label>
                 <select
                   value={eventDraft.auditor}
                   onChange={(e) => setEventDraft({ ...eventDraft, auditor: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full border border-grafite-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-grafite-700 focus:border-grafite-700"
                 >
                   {auditoresDb.map((a) => <option key={a.id} value={a.nome}>{a.nome}</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Observações (opcional)</label>
+                <label className="text-xs font-bold text-grafite-500 uppercase tracking-wider mb-1.5 block">Observações (opcional)</label>
                 <textarea
                   value={eventDraft.notes}
                   onChange={(e) => setEventDraft({ ...eventDraft, notes: e.target.value })}
                   rows="2"
                   placeholder="Ex.: focar em registros de calibração..."
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                  className="w-full border border-grafite-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-grafite-700 focus:border-grafite-700 resize-none"
                 />
               </div>
             </div>
@@ -4542,12 +4545,12 @@ Gestão da Qualidade — Kalenborn do Brasil`
                 </button>
               ) : <div />}
               <div className="flex gap-3">
-                <button onClick={() => setEventDraft(null)} className="px-4 py-2.5 rounded-xl font-bold text-sm text-slate-600 hover:bg-slate-100 transition">
+                <button onClick={() => setEventDraft(null)} className="px-4 py-2.5 rounded-xl font-bold text-sm text-grafite-600 hover:bg-grafite-100 transition">
                   Cancelar
                 </button>
                 <button
                   onClick={() => saveEvent(eventDraft)}
-                  className="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-lg shadow-indigo-600/25 flex items-center gap-2"
+                  className="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-grafite-900 hover:bg-grafite-950 transition shadow-lg shadow-grafite-900/25 flex items-center gap-2"
                 >
                   <Save size={16} /> {eventDraft.id ? 'Salvar Alterações' : 'Programar Auditoria'}
                 </button>
@@ -4562,16 +4565,16 @@ Gestão da Qualidade — Kalenborn do Brasil`
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 print:hidden" onClick={() => setEmailDraft(null)}>
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start gap-4 mb-2">
-              <div className="p-2.5 rounded-xl shrink-0 bg-indigo-100 text-indigo-600">
+              <div className="p-2.5 rounded-xl shrink-0 bg-grafite-100 text-grafite-900">
                 <Mail size={22} />
               </div>
               <div>
-                <h3 className="text-lg font-black text-slate-900">Rascunho de notificação</h3>
-                <p className="text-sm text-slate-500 mt-1">
+                <h3 className="text-lg font-semibold text-grafite-900">Rascunho de notificação</h3>
+                <p className="text-sm text-grafite-500 mt-1">
                   Auditoria programada para o setor <span className="font-bold">{emailDraft.sector}</span>.
                 </p>
               </div>
-              <button onClick={() => setEmailDraft(null)} aria-label="Fechar" className="ml-auto text-slate-400 hover:text-slate-600 shrink-0">
+              <button onClick={() => setEmailDraft(null)} aria-label="Fechar" className="ml-auto text-grafite-400 hover:text-grafite-600 shrink-0">
                 <X size={18} />
               </button>
             </div>
@@ -4584,19 +4587,19 @@ Gestão da Qualidade — Kalenborn do Brasil`
               </div>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+            <div className="bg-papel border border-grafite-200 rounded-xl p-4 space-y-2">
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Assunto</p>
-                <p className="text-sm font-bold text-slate-800">{emailDraft.subject}</p>
+                <p className="text-[10px] font-bold text-grafite-400 uppercase tracking-wider">Assunto</p>
+                <p className="text-sm font-bold text-grafite-800">{emailDraft.subject}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mensagem</p>
-                <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans">{emailDraft.body}</pre>
+                <p className="text-[10px] font-bold text-grafite-400 uppercase tracking-wider">Mensagem</p>
+                <pre className="text-sm text-grafite-700 whitespace-pre-wrap font-sans">{emailDraft.body}</pre>
               </div>
             </div>
 
             <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setEmailDraft(null)} className="px-4 py-2.5 rounded-xl font-bold text-sm text-slate-600 hover:bg-slate-100 transition">
+              <button onClick={() => setEmailDraft(null)} className="px-4 py-2.5 rounded-xl font-bold text-sm text-grafite-600 hover:bg-grafite-100 transition">
                 Fechar
               </button>
               <button
@@ -4610,7 +4613,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
                     notify('Não foi possível copiar', 'Seu navegador não permite copiar automaticamente. Selecione e copie o texto acima manualmente.');
                   }
                 }}
-                className={`px-5 py-2.5 rounded-xl font-bold text-sm text-white transition shadow-lg flex items-center gap-2 ${emailCopied ? 'bg-emerald-600 shadow-emerald-600/25' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'}`}
+                className={`px-5 py-2.5 rounded-xl font-bold text-sm text-white transition shadow-lg flex items-center gap-2 ${emailCopied ? 'bg-emerald-600 shadow-emerald-600/25' : 'bg-grafite-900 hover:bg-grafite-950 shadow-grafite-900/25'}`}
               >
                 {emailCopied ? <Check size={16} /> : <Copy size={16} />} {emailCopied ? 'Copiado!' : 'Copiar e-mail'}
               </button>
@@ -4625,24 +4628,24 @@ Gestão da Qualidade — Kalenborn do Brasil`
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 print:hidden" onClick={closeConfirm}>
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start gap-4 mb-4">
-              <div className={`p-2.5 rounded-xl shrink-0 ${confirmAction.danger ? 'bg-rose-100 text-rose-600' : 'bg-indigo-100 text-indigo-600'}`}>
+              <div className={`p-2.5 rounded-xl shrink-0 ${confirmAction.danger ? 'bg-rose-100 text-rose-600' : 'bg-grafite-100 text-grafite-900'}`}>
                 <AlertCircle size={22} />
               </div>
               <div>
-                <h3 className="text-lg font-black text-slate-900">{confirmAction.title}</h3>
-                <p className="text-sm text-slate-500 mt-1.5 leading-relaxed">{confirmAction.message}</p>
+                <h3 className="text-lg font-semibold text-grafite-900">{confirmAction.title}</h3>
+                <p className="text-sm text-grafite-500 mt-1.5 leading-relaxed">{confirmAction.message}</p>
               </div>
-              <button onClick={closeConfirm} aria-label="Fechar" className="ml-auto text-slate-400 hover:text-slate-600 shrink-0">
+              <button onClick={closeConfirm} aria-label="Fechar" className="ml-auto text-grafite-400 hover:text-grafite-600 shrink-0">
                 <X size={18} />
               </button>
             </div>
             <div className="flex justify-end gap-3 mt-6">
-              <button onClick={closeConfirm} className="px-4 py-2.5 rounded-xl font-bold text-sm text-slate-600 hover:bg-slate-100 transition">
+              <button onClick={closeConfirm} className="px-4 py-2.5 rounded-xl font-bold text-sm text-grafite-600 hover:bg-grafite-100 transition">
                 Cancelar
               </button>
               <button
                 onClick={handleConfirmedAction}
-                className={`px-5 py-2.5 rounded-xl font-bold text-sm text-white transition shadow-lg ${confirmAction.danger ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'}`}
+                className={`px-5 py-2.5 rounded-xl font-bold text-sm text-white transition shadow-lg ${confirmAction.danger ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25' : 'bg-grafite-900 hover:bg-grafite-950 shadow-grafite-900/25'}`}
               >
                 {confirmAction.confirmLabel || 'Confirmar'}
               </button>
@@ -4674,25 +4677,25 @@ Gestão da Qualidade — Kalenborn do Brasil`
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-start justify-between mb-5">
                 <div>
-                  <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider mb-1">Por setor</p>
-                  <h3 className="text-xl font-black text-slate-900">{config.label}</h3>
+                  <p className="text-[11px] font-bold text-grafite-900 uppercase tracking-wider mb-1">Por setor</p>
+                  <h3 className="text-xl font-semibold text-grafite-900">{config.label}</h3>
                 </div>
-                <button onClick={() => setStatusDetalhe(null)} aria-label="Fechar" className="text-slate-400 hover:text-slate-600 shrink-0">
+                <button onClick={() => setStatusDetalhe(null)} aria-label="Fechar" className="text-grafite-400 hover:text-grafite-600 shrink-0">
                   <X size={18} />
                 </button>
               </div>
 
               {linhas.length === 0 ? (
-                <p className="text-slate-400 text-sm text-center py-8">Nenhum item "{config.label}" registrado ainda.</p>
+                <p className="text-grafite-400 text-sm text-center py-8">Nenhum item "{config.label}" registrado ainda.</p>
               ) : (
                 <div className="space-y-3">
                   {linhas.map(({ setor, count, total }) => (
                     <div key={setor}>
                       <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="font-bold text-slate-700">{setor}</span>
-                        <span className={`font-black font-mono ${corClasses.text}`}>{count} <span className="text-slate-400 font-normal text-xs">de {total}</span></span>
+                        <span className="font-bold text-grafite-700">{setor}</span>
+                        <span className={`font-semibold font-mono ${corClasses.text}`}>{count} <span className="text-grafite-400 font-normal text-xs">de {total}</span></span>
                       </div>
-                      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                      <div className="w-full bg-grafite-100 rounded-full h-2 overflow-hidden">
                         <div className={`h-full rounded-full ${corClasses.bar}`} style={{ width: `${(count / maxCount) * 100}%` }} />
                       </div>
                     </div>
