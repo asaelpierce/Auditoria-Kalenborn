@@ -965,6 +965,11 @@ function App({ currentUser, extraAdmins, toggleExtraAdmin, onLogout }) {
   const [historyPage, setHistoryPage]     = useState(1);
   const HISTORY_PAGE_SIZE = 8;
   const [rncStatusFilter, setRncStatusFilter] = useState('Todas');
+  // Qual RNC está aberta no formulário. Com null, mostra a lista.
+  // Antes a tela empilhava o relatório inteiro de cada uma — com 14
+  // RNCs eram 14 formulários completos, um embaixo do outro.
+  const [rncAberta, setRncAberta] = useState(null);
+  const [rncBusca, setRncBusca] = useState('');
   const [rncScopeFilter, setRncScopeFilter] = useState('setor');
   const [historyNcFilter, setHistoryNcFilter] = useState('Todas');
   const [editingAuditId, setEditingAuditId]   = useState(null);
@@ -3188,7 +3193,14 @@ Gestão da Qualidade — Kalenborn do Brasil`
     const rncsDoEscopo = (rncScopeFilter === 'setor' && temAuditoriaAberta)
       ? rncs.filter((r) => r.process === selectedSector)
       : rncs;
-    const visibleRncs = rncStatusFilter === 'Todas' ? rncsDoEscopo : rncsDoEscopo.filter((r) => r.status === rncStatusFilter);
+    const porStatus = rncStatusFilter === 'Todas' ? rncsDoEscopo : rncsDoEscopo.filter((r) => r.status === rncStatusFilter);
+    const termo = rncBusca.trim().toLowerCase();
+    const visibleRncs = !termo ? porStatus : porStatus.filter((r) =>
+      [r.id, r.process, r.description, r.responsible, r.sourceRaiNumber]
+        .some((v) => String(v || '').toLowerCase().includes(termo)));
+    // Quando uma está aberta, só ela aparece — e a impressão de todas
+    // continua possível pelo botão do topo, que ignora este recorte.
+    const emFoco = rncAberta ? visibleRncs.filter((r) => r.id === rncAberta) : visibleRncs;
     return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center mb-4">
@@ -3197,15 +3209,19 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <p className="text-grafite-500 text-sm mt-1">{rncs.filter((r) => r.status === 'Aberta').length} aberta(s) · {rncs.length} no total</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={exportRncExcel} className="flex items-center gap-2 bg-white border border-grafite-200 text-emerald-700 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-50 transition text-sm shadow-sm">
-            <FileSpreadsheet size={16} /> Exportar Excel
-          </button>
-          <button onClick={printDocument} className="flex items-center gap-2 bg-white border border-grafite-200 text-grafite-700 px-4 py-2.5 rounded-xl font-bold hover:bg-papel transition text-sm shadow-sm">
-            <Printer size={16} /> Imprimir / PDF
-          </button>
+          {!rncAberta && (
+            <button onClick={exportRncExcel} className="flex items-center gap-2 bg-white border border-grafite-200 text-emerald-700 px-4 py-2.5 rounded-xl font-semibold hover:bg-emerald-50 transition text-sm shadow-sm">
+              <FileSpreadsheet size={16} /> Exportar todas
+            </button>
+          )}
+          {!rncAberta && (
+            <button onClick={printDocument} className="flex items-center gap-2 bg-white border border-grafite-200 text-grafite-700 px-4 py-2.5 rounded-xl font-semibold hover:bg-papel transition text-sm shadow-sm">
+              <Printer size={16} /> Imprimir todas
+            </button>
+          )}
           <button
             onClick={() => createRnc(null)}
-            className="flex items-center gap-2 bg-rose-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-rose-700 transition text-sm shadow-lg shadow-rose-600/25"
+            className="flex items-center gap-2 bg-grafite-900 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-grafite-700 transition text-sm"
           >
             <Plus size={16} /> Gerar Nova RNC
           </button>
@@ -3237,7 +3253,7 @@ Gestão da Qualidade — Kalenborn do Brasil`
         </div>
       )}
 
-      <div className="flex gap-2 print:hidden">
+      <div className="flex gap-2 items-center flex-wrap print:hidden">
         {['Todas', 'Aberta', 'Fechada'].map((opt) => (
           <button
             key={opt}
@@ -3253,6 +3269,29 @@ Gestão da Qualidade — Kalenborn do Brasil`
         ))}
       </div>
 
+      {!rncAberta && rncs.length > 0 && (
+        <div className="flex items-center gap-3 flex-wrap print:hidden -mt-2">
+          <input
+            value={rncBusca}
+            onChange={(e) => setRncBusca(e.target.value)}
+            placeholder="Buscar por número, setor, descrição ou responsável"
+            className="flex-1 min-w-[280px] border border-grafite-200 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-grafite-400 bg-white"
+          />
+          {rncBusca && (
+            <button onClick={() => setRncBusca('')}
+              className="text-xs text-grafite-500 hover:text-grafite-900 transition">limpar</button>
+          )}
+          <span className="text-xs text-grafite-500 font-mono">{visibleRncs.length} de {rncs.length}</span>
+        </div>
+      )}
+
+      {rncAberta && (
+        <button onClick={() => setRncAberta(null)}
+          className="print:hidden flex items-center gap-2 text-sm font-medium text-grafite-600 hover:text-grafite-900 transition -mt-2">
+          <ChevronDown size={16} className="rotate-90" /> Voltar para a lista
+        </button>
+      )}
+
       {rncs.length === 0 ? (
         <div className="bg-white border border-grafite-200 rounded-2xl p-16 text-center text-grafite-500 shadow-sm font-medium flex flex-col items-center justify-center">
           <AlertTriangle size={48} className="text-grafite-300 mb-4" />
@@ -3263,7 +3302,32 @@ Gestão da Qualidade — Kalenborn do Brasil`
           <ShieldCheck size={48} className="text-grafite-300 mb-4" />
           Nenhuma RNC com status "{rncStatusFilter}"{rncScopeFilter === 'setor' && temAuditoriaAberta ? ` em ${selectedSector}` : ''}.
         </div>
-      ) : visibleRncs.map((rnc) => (
+      ) : !rncAberta ? (
+        /* ---- lista ---- */
+        <div className="bg-white border border-grafite-200 rounded-2xl shadow-sm overflow-hidden print:hidden">
+          <div className="grid grid-cols-[88px_1fr_150px_110px_96px] gap-3 px-5 py-3 border-b border-grafite-200 bg-papel text-[11px] font-semibold text-grafite-500 uppercase tracking-wider">
+            <span>RNC</span><span>Descrição</span><span>Setor</span><span>Emissão</span><span className="text-right">Situação</span>
+          </div>
+          {visibleRncs.map((rnc) => (
+            <button key={rnc.id} onClick={() => setRncAberta(rnc.id)}
+              className="w-full grid grid-cols-[88px_1fr_150px_110px_96px] gap-3 px-5 py-3.5 border-b border-grafite-100 last:border-0 text-left items-center hover:bg-papel transition">
+              <span className="font-mono text-[13px] font-semibold text-grafite-900">{rnc.id}</span>
+              <span className="text-[13px] text-grafite-700 truncate" title={rnc.description}>
+                {rnc.description || <em className="text-grafite-400">sem descrição</em>}
+              </span>
+              <span className="text-xs text-grafite-500 truncate">{rnc.process}</span>
+              <span className="font-mono text-xs text-grafite-500">{formatDateOnly(rnc.date)}</span>
+              <span className="text-right">
+                <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                  rnc.status === 'Aberta' ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                          : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+                  {rnc.status}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : emFoco.map((rnc) => (
         <div
           key={rnc.id}
           className={`bg-white border-2 border-black font-sans text-sm relative mb-8 shadow-xl max-w-[1000px] mx-auto print:shadow-none print:border-0 print:w-full ${
