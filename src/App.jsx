@@ -149,6 +149,7 @@ const SENHA_PADRAO = 'Kdb@2026';
 
 const USUARIOS_BASE = [
   { email: 'luciene.batista@kalenborn.com.br', nome: 'Luciene Batista', setor: 'QUALIDADE - SEGURANÇA NO TRABALHO', role: 'admin' },
+  { email: 'azevedo_bh@yahoo.com.br',        nome: 'Azevedo',         setor: 'QUALIDADE - SEGURANÇA NO TRABALHO', role: 'admin' },
   { email: 'asael.abdon@kalenborn.com.br',    nome: 'Asael Abdon',     setor: 'QUALIDADE - SEGURANÇA NO TRABALHO', role: 'admin' },
   { email: 'luiz@kalenborn.com.br',            nome: 'Luiz',            setor: 'ALTA DIREÇÃO', role: 'setor' },
   { email: 'fabio.lago@kalenborn.com.br',       nome: 'Fábio Lago',     setor: 'ALTA DIREÇÃO', role: 'setor' },
